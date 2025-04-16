@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.env
+.env
+env/
+venv/
+ENV/
+venv.bak/
+.Python
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+local_settings.py
+*.sqlite3
+*.pyc
+
+# React
+node_modules/
+build/
+dist/
+*.log
+.npm/
+.yarn/
+.env.local
+.env.development
+.env.production
+
+# VSCode + OS
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Git
+*.orig
+
+# dotenv
+.env.*
+!.env.example
