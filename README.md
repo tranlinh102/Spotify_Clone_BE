@@ -10,7 +10,7 @@
 
 ---
 
-## 🚀 Cách chạy dự án
+## 🚀 Cách chạy dự án trên hệ điều hành Linux
 
 ### 1. Clone repo & tạo môi trường ảo
 
@@ -22,8 +22,16 @@ git clone https://github.com/tranlinh102/Spotify_Clone_BE.git
 cd Spotify_Clone_BE
 ```
 
+Nếu bạn chưa cài python thì thực hiện các câu lệnh sau
 ```bash
-python3.12 -m venv venv || python3 -m venv venv
+sudo apt update
+sudo apt install python3.12
+sudo apt install python3-venv
+sudo apt install python3-pip
+```
+
+```bash
+python3 -m venv venv
 ```
 
 ```bash
