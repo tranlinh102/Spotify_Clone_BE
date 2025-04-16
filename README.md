@@ -27,7 +27,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-###3. Cấu hình database
+### 3. Cấu hình database
 Tạo cơ sở dữ liệu MySQL có tên là spotify và chạy script sql trong file **database.sql**
 Sửa file Spotify_Clone_BE/core/settings.py chứa thông tin kết nối MySQL:
 
