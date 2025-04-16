@@ -30,6 +30,7 @@ sudo apt install python3-venv
 sudo apt install python3-pip
 ```
 
+Nếu có python rồi thì thực hiện
 ```bash
 python3 -m venv venv
 ```
