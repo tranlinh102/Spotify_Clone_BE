@@ -16,9 +16,17 @@
 
 ```bash
 git clone https://github.com/tranlinh102/Spotify_Clone_BE.git
-cd Spotify_Clone_BE
+```
 
+```bash
+cd Spotify_Clone_BE
+```
+
+```bash
 python3.12 -m venv venv || python3 -m venv venv
+```
+
+```bash
 source venv/bin/activate
 ```
 
