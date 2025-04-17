@@ -20,6 +20,30 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
         token['is_staff'] = user.is_staff
         return token
+    
+def set_jwt_cookies(response: Response, access_token: str, refresh_token: str = None):
+    # ACCESS TOKEN – gửi mọi request
+    response.set_cookie(
+        key='access_token',
+        value=access_token,
+        httponly=False,
+        secure=True,
+        samesite='None',
+        path='/',
+        max_age=60 * 30 # 30 phút
+    )
+
+    # REFRESH TOKEN – dùng riêng, nếu có truyền vào
+    if refresh_token:
+        response.set_cookie(
+            key='refresh_token',
+            value=refresh_token,
+            httponly=True,
+            secure=True,
+            samesite='None',
+            path='/api/auth/refresh',
+            max_age=7 * 24 * 60 * 60  # 7 ngày
+        )
 
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -31,31 +55,8 @@ class LoginView(TokenObtainPairView):
         refresh = serializer.validated_data['refresh']
         access = serializer.validated_data['access']
 
-        res = Response({'message': 'Login success'}, status=status.HTTP_200_OK)
-        res.data['is_staff'] = serializer.user.is_staff
-
-        # REFRESH TOKEN: HttpOnly cookie
-        res.set_cookie(
-            key='refresh_token',
-            value=refresh,
-            httponly=True,
-            secure=True,
-            samesite='None',  # SameSite=None để cookie có thể gửi đến các domain khác
-            path='/api/auth/refresh',  # chỉ gửi ở endpoint refresh
-            max_age=7 * 24 * 60 * 60 # 7 ngày
-        )
-
-        # ACCESS TOKEN: Normal Cookie → frontend sẽ tự gửi cùng mọi request
-        res.set_cookie(
-            key='access_token',
-            value=access,
-            httponly=False,
-            secure=True,
-            samesite='None',  # SameSite=None để cookie có thể gửi đến các domain khác
-            path='/',
-            max_age=60  # 5 phút
-        )
-
+        res = Response({'message': 'Login success', 'is_staff': serializer.user.is_staff}, status=status.HTTP_200_OK)
+        set_jwt_cookies(res, access_token=access, refresh_token=refresh)
         return res
 
 class CookieTokenRefreshView(APIView):
@@ -76,18 +77,8 @@ class CookieTokenRefreshView(APIView):
             access_token = str(token.access_token)
 
             # Tạo response
-            res = Response({'Refresh access_token success': access_token}, status=status.HTTP_200_OK)
-
-            # Lưu access token mới vào cookie thường (frontend sẽ tự gửi kèm)
-            res.set_cookie(
-                key='access_token',
-                value=access_token,
-                httponly=False,
-                secure=True,
-                samesite='None',  # SameSite=None để cookie có thể gửi đến các domain khác
-                path='/',
-                max_age=60  # 5 phút
-            )
+            res = Response({'message': "Refresh access_token success"}, status=status.HTTP_200_OK)
+            set_jwt_cookies(res, access_token=access_token)  # không cần set lại refresh
 
             return res
 
