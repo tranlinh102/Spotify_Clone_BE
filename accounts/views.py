@@ -53,7 +53,7 @@ class LoginView(TokenObtainPairView):
             secure=False,
             samesite='Lax',
             path='/',
-            max_age=5 * 60  # 5 phút
+            max_age=60  # 5 phút
         )
 
         return res
@@ -61,15 +61,39 @@ class LoginView(TokenObtainPairView):
 class CookieTokenRefreshView(APIView):
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get(settings.SIMPLE_JWT['AUTH_COOKIE'])
+
         if not refresh_token:
-            return Response({'detail': 'Refresh token not found'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {'detail': 'Refresh token not found in cookie'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
         try:
+            # Tạo access token mới từ refresh
             token = RefreshToken(refresh_token)
             access_token = str(token.access_token)
-            return Response({'access': access_token}, status=status.HTTP_200_OK)
+
+            # Tạo response
+            res = Response({'Refresh access_token success': access_token}, status=status.HTTP_200_OK)
+
+            # Lưu access token mới vào cookie thường (frontend sẽ tự gửi kèm)
+            res.set_cookie(
+                key='access_token',
+                value=access_token,
+                httponly=False,
+                secure=False,  # Đặt True nếu dùng HTTPS
+                samesite='Lax',
+                path='/',
+                max_age=60  # 5 phút
+            )
+
+            return res
+
         except TokenError as e:
-            return Response({'detail': 'Invalid refresh token'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {'detail': 'Invalid or expired refresh token'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         
 class LogoutView(APIView):
     def post(self, request, *args, **kwargs):
@@ -83,3 +107,19 @@ class LogoutView(APIView):
         )
         res = Response({"message": "Logout success"}, status=status.HTTP_200_OK)
         return res
+    
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
+class UserInfoView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "is_staff": user.is_staff
+        })
