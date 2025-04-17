@@ -59,6 +59,8 @@ class LoginView(TokenObtainPairView):
         return res
 
 class CookieTokenRefreshView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get(settings.SIMPLE_JWT['AUTH_COOKIE'])
 
