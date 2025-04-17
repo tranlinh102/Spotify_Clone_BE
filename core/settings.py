@@ -151,7 +151,7 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_COOKIE": "refresh_token",  # tên cookie
-    "AUTH_COOKIE_SECURE": False,     # True nếu HTTPS
+    "AUTH_COOKIE_SECURE": True, 
     "AUTH_COOKIE_HTTP_ONLY": True,
     "AUTH_COOKIE_PATH": "/api/auth/refresh/",  # chỉ gửi cookie khi gọi endpoint này
 }

@@ -39,8 +39,8 @@ class LoginView(TokenObtainPairView):
             key='refresh_token',
             value=refresh,
             httponly=True,
-            secure=False,  # True nếu dùng HTTPS
-            samesite='Lax',
+            secure=True,
+            samesite='None',  # SameSite=None để cookie có thể gửi đến các domain khác
             path='/api/auth/refresh',  # chỉ gửi ở endpoint refresh
             max_age=7 * 24 * 60 * 60 # 7 ngày
         )
@@ -50,8 +50,8 @@ class LoginView(TokenObtainPairView):
             key='access_token',
             value=access,
             httponly=False,
-            secure=False,
-            samesite='Lax',
+            secure=True,
+            samesite='None',  # SameSite=None để cookie có thể gửi đến các domain khác
             path='/',
             max_age=60  # 5 phút
         )
@@ -81,8 +81,8 @@ class CookieTokenRefreshView(APIView):
                 key='access_token',
                 value=access_token,
                 httponly=False,
-                secure=False,  # Đặt True nếu dùng HTTPS
-                samesite='Lax',
+                secure=True,
+                samesite='None',  # SameSite=None để cookie có thể gửi đến các domain khác
                 path='/',
                 max_age=60  # 5 phút
             )
