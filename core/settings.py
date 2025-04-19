@@ -40,8 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'accounts.apps.AccountsConfig',
     'storages',
+    'accounts.apps.AccountsConfig',
+    'music.apps.MusicConfig',
 ]
 
 MIDDLEWARE = [
@@ -147,7 +148,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),  # thời gian sống của access token
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
@@ -157,13 +158,20 @@ SIMPLE_JWT = {
     "AUTH_COOKIE_PATH": "/api/auth/refresh/",  # chỉ gửi cookie khi gọi endpoint này
 }
 
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
-AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_SIGNATURE_NAME = 's3v4'
-AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='ap-southeast-1')
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = None
-AWS_S3_VERIFY = True
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "OPTIONS": {
+            "access_key": config('AWS_ACCESS_KEY_ID'),
+            "secret_key": config('AWS_SECRET_ACCESS_KEY'),
+            "bucket_name": config('AWS_STORAGE_BUCKET_NAME'),
+            "region_name": config('AWS_S3_REGION_NAME', default='ap-southeast-1'),
+            "signature_version": "s3v4",
+            "file_overwrite": False,
+            "default_acl": None,
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
