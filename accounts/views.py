@@ -9,6 +9,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from django.conf import settings
+from rest_framework.permissions import IsAuthenticated
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
@@ -45,6 +46,24 @@ def set_jwt_cookies(response: Response, access_token: str, refresh_token: str = 
             max_age=7 * 24 * 60 * 60  # 7 ngày
         )
 
+def get_user_info(user):
+    # try:
+    #     profile = user.profile  # OneToOneField -> Django tự tạo `user.profile`
+    #     avatar = profile.avatar
+    #     favorite_books = profile.favorite_books
+    # except Profile.DoesNotExist:
+    #     avatar = None
+    #     favorite_books = None
+
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "is_staff": user.is_staff,
+        # "avatar": avatar,
+        # "favorite_books": favorite_books,
+    }
+
 class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
@@ -55,7 +74,7 @@ class LoginView(TokenObtainPairView):
         refresh = serializer.validated_data['refresh']
         access = serializer.validated_data['access']
 
-        res = Response({'message': 'Login success', 'is_staff': serializer.user.is_staff}, status=status.HTTP_200_OK)
+        res = Response({'message': 'Login success', 'is_staff': serializer.user.is_staff, 'user_info': get_user_info(serializer.user)}, status=status.HTTP_200_OK)
         set_jwt_cookies(res, access_token=access, refresh_token=refresh)
         return res
 
@@ -100,19 +119,10 @@ class LogoutView(APIView):
         )
         res = Response({"message": "Logout success"}, status=status.HTTP_200_OK)
         return res
-    
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 
 class UserInfoView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
-        return Response({
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "is_staff": user.is_staff
-        })
+        return Response({'user_info': get_user_info(user)}, status=status.HTTP_200_OK)
