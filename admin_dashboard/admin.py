@@ -1,5 +1,5 @@
 from django.contrib import admin
-from music.models import Artist, Album, Song, Favorite, Download, AlbumSong, Follower, Message
+from manager.models import Artist, Album, Song, Favorite, Download, AlbumSong, Follower, Message
 @admin.register(Artist)
 class ArtistAdmin(admin.ModelAdmin):
     list_display = ('artist_id', 'name', 'created_at')

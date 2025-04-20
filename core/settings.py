@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'accounts.apps.AccountsConfig',
-    'music.apps.MusicConfig',
+    'manager.apps.ManagerConfig',
     'admin_dashboard.apps.AdminDashboardConfig',
 ]
 
