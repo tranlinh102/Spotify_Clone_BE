@@ -29,7 +29,7 @@ class Songs(models.Model):
     artist = models.ForeignKey(Artists, models.DO_NOTHING, blank=True, null=True)
     duration = models.IntegerField()
     file_path = models.FileField(upload_to='songs/', max_length=255)
-    video_url = models.CharField(max_length=255, blank=True, null=True)
+    video_url = models.FileField(upload_to='video/', max_length=255, blank=True, null=True)
     content_type = models.CharField(max_length=7)
     created_at = models.DateTimeField(blank=True, null=True)
 

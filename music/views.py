@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 
 # Create your views here.
 from rest_framework.views import APIView
@@ -22,3 +22,9 @@ class SongUploadView(APIView):
 class SongListView(ListAPIView):
     queryset = Songs.objects.all()
     serializer_class = SongsSerializer
+
+class SongDeleteView(APIView):
+    def delete(self, request, song_id):
+        song = get_object_or_404(Songs, song_id=song_id)
+        song.delete()
+        return Response({"message": "Song deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
