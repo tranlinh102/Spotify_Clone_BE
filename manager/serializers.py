@@ -1,63 +1,88 @@
 from rest_framework import serializers
-from .models import Artist, Album, Song, AlbumSong, Favorite, Download, Follower, Message
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
-
+from django.contrib.auth.models import User
+from .models import *
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email']
 
+class PlaylistSerializer(serializers.ModelSerializer):
+    created_by = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Playlist
+        fields = '__all__'
+
 class ArtistSerializer(serializers.ModelSerializer):
     class Meta:
         model = Artist
-        fields = ['artist_id', 'name', 'bio', 'created_at']
+        fields = '__all__'
 
 class AlbumSerializer(serializers.ModelSerializer):
-    created_by = UserSerializer(read_only=True)
+    artist = ArtistSerializer(read_only=True)
+
     class Meta:
         model = Album
-        fields = ['album_id', 'title', 'created_by', 'created_at']
+        fields = '__all__'
 
 class SongSerializer(serializers.ModelSerializer):
-    artist = ArtistSerializer(read_only=True)
     class Meta:
         model = Song
-        fields = ['song_id', 'title', 'artist', 'duration', 'file_path', 'video_url', 'content_type', 'created_at']
+        fields = '__all__'
 
-class FavoriteSerializer(serializers.ModelSerializer):
+class ArtistSongSerializer(serializers.ModelSerializer):
+    artist = ArtistSerializer(read_only=True)
     song = SongSerializer(read_only=True)
-    user = UserSerializer(read_only=True)
-    class Meta:
-        model = Favorite
-        fields = ['user', 'song', 'added_at']
 
-class DownloadSerializer(serializers.ModelSerializer):
-    song = SongSerializer(read_only=True)
-    user = UserSerializer(read_only=True)
     class Meta:
-        model = Download
-        fields = ['user', 'song', 'downloaded_at']
+        model = ArtistSong
+        fields = '__all__'
+
+class PlaylistSongSerializer(serializers.ModelSerializer):
+    playlist = PlaylistSerializer(read_only=True)
+    song = SongSerializer(read_only=True)
+
+    class Meta:
+        model = PlaylistSong
+        fields = '__all__'
 
 class AlbumSongSerializer(serializers.ModelSerializer):
-    song = SongSerializer(read_only=True)
     album = AlbumSerializer(read_only=True)
+    song = SongSerializer(read_only=True)
+
     class Meta:
         model = AlbumSong
-        fields = ['album', 'song']
+        fields = '__all__'
 
-class FollowersSerializer(serializers.ModelSerializer):
-    artist = ArtistSerializer(read_only=True)
+class FavoriteSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    song = SongSerializer(read_only=True)
+
+    class Meta:
+        model = Favorite
+        fields = '__all__'
+
+class DownloadSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    song = SongSerializer(read_only=True)
+
+    class Meta:
+        model = Download
+        fields = '__all__'
+
+class FollowerSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    artist = ArtistSerializer(read_only=True)
+
     class Meta:
         model = Follower
-        fields = ['user', 'artist', 'followed_at']
+        fields = '__all__'
 
 class MessageSerializer(serializers.ModelSerializer):
     sender = UserSerializer(read_only=True)
     receiver = UserSerializer(read_only=True)
+
     class Meta:
         model = Message
-        fields = ['message_id','sender', 'receiver', 'message', 'sent_at']
+        fields = '__all__'

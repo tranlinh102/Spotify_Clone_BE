@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 from .models import Artist, Album, Song, Favorite, Download, AlbumSong, Follower, Message
-from .serializers import ArtistSerializer, AlbumSerializer, SongSerializer, FavoriteSerializer, DownloadSerializer, AlbumSongSerializer, FollowersSerializer, MessageSerializer
+from .serializers import ArtistSerializer, AlbumSerializer, SongSerializer, FavoriteSerializer, DownloadSerializer, AlbumSongSerializer, FollowerSerializer, MessageSerializer
 
 class ArtistViewSet(viewsets.ModelViewSet):
     queryset = Artist.objects.all()
@@ -29,7 +29,7 @@ class AlbumSongViewSet(viewsets.ModelViewSet):
 
 class FollowersViewSet(viewsets.ModelViewSet):
     queryset = Follower.objects.all()
-    serializer_class = FollowersSerializer
+    serializer_class = FollowerSerializer
 
 class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
