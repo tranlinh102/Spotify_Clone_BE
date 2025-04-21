@@ -108,7 +108,10 @@ class CookieTokenRefreshView(APIView):
             )
         
 class LogoutView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request, *args, **kwargs):
+        res = Response({"message": "Logout success"}, status=status.HTTP_200_OK)  # 🛠 Khởi tạo res trước
         res.delete_cookie(
             key='access_token',
             path='/',
@@ -117,8 +120,8 @@ class LogoutView(APIView):
             key=settings.SIMPLE_JWT['AUTH_COOKIE'],  # refresh_token
             path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH'],
         )
-        res = Response({"message": "Logout success"}, status=status.HTTP_200_OK)
         return res
+
 
 class UserInfoView(APIView):
     permission_classes = [IsAuthenticated]
