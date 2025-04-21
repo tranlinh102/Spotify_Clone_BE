@@ -57,8 +57,8 @@ class LoginView(TokenObtainPairView):
 
         res = Response({
             'message': 'Login success', 
-            'is_staff': serializer.user.is_staff, 
-            'access_token': access #Lấy thêm access token để gửi về client
+            'is_staff': serializer.user.is_staff
+            ,'access_token': access #Lấy thêm access token để gửi về client
             }, status=status.HTTP_200_OK)
         set_jwt_cookies(res, access_token=access, refresh_token=refresh)
         return res

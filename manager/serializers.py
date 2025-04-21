@@ -43,6 +43,7 @@ class DownloadSerializer(serializers.ModelSerializer):
 
 class AlbumSongSerializer(serializers.ModelSerializer):
     song = SongSerializer(read_only=True)
+    album = AlbumSerializer(read_only=True)
     class Meta:
         model = AlbumSong
         fields = ['album', 'song']
@@ -59,4 +60,4 @@ class MessageSerializer(serializers.ModelSerializer):
     receiver = UserSerializer(read_only=True)
     class Meta:
         model = Message
-        fields = ['sender', 'receiver', 'message', 'sent_at']
+        fields = ['message_id','sender', 'receiver', 'message', 'sent_at']
