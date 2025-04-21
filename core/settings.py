@@ -155,7 +155,7 @@ SIMPLE_JWT = {
     "AUTH_COOKIE": "refresh_token",  # tên cookie
     "AUTH_COOKIE_SECURE": True, 
     "AUTH_COOKIE_HTTP_ONLY": True,
-    "AUTH_COOKIE_PATH": "/api/auth/refresh/",  # chỉ gửi cookie khi gọi endpoint này
+    "AUTH_COOKIE_PATH": "/api/auth/",  # chỉ gửi cookie khi gọi endpoint này
 }
 
 STORAGES = {
