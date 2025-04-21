@@ -38,10 +38,14 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.staticfiles',
+    'django.contrib.admin',
+    'django.contrib.messages',
     'rest_framework',
     'corsheaders',
     'storages',
     'accounts.apps.AccountsConfig',
+    'manager.apps.ManagerConfig',
+    'admin_dashboard.apps.AdminDashboardConfig',
     'music.apps.MusicConfig',
 ]
 
@@ -53,6 +57,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
