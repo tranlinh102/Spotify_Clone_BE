@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from decouple import config
+from datetime import timedelta
 from pathlib import Path
 import pymysql
 pymysql.install_as_MySQLdb()
@@ -40,9 +42,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'rest_framework',
     'corsheaders',
+    'storages',
     'accounts.apps.AccountsConfig',
     'manager.apps.ManagerConfig',
     'admin_dashboard.apps.AdminDashboardConfig',
+    'music.apps.MusicConfig',
 ]
 
 MIDDLEWARE = [
@@ -148,15 +152,31 @@ REST_FRAMEWORK = {
     ),
 }
 
-from datetime import timedelta
-
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),  # thời gian sống của access token
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_COOKIE": "refresh_token",  # tên cookie
     "AUTH_COOKIE_SECURE": True, 
     "AUTH_COOKIE_HTTP_ONLY": True,
-    "AUTH_COOKIE_PATH": "/api/auth/refresh/",  # chỉ gửi cookie khi gọi endpoint này
+    "AUTH_COOKIE_PATH": "/api/auth/",  # chỉ gửi cookie khi gọi endpoint này
+}
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "OPTIONS": {
+            "access_key": config('AWS_ACCESS_KEY_ID'),
+            "secret_key": config('AWS_SECRET_ACCESS_KEY'),
+            "bucket_name": config('AWS_STORAGE_BUCKET_NAME'),
+            "region_name": config('AWS_S3_REGION_NAME', default='ap-southeast-1'),
+            "signature_version": "s3v4",
+            "file_overwrite": False,
+            "default_acl": None,
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
 }
