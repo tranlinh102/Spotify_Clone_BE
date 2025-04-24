@@ -9,12 +9,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import ListAPIView
-from music.models import Songs
-from music.serializers import SongsSerializer
+from manager.models import Song
+from manager.serializers import SongSerializer
 
 class SongUploadView(APIView):
     def post(self, request):
-        serializer = SongsSerializer(data=request.data)
+        serializer = SongSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response({
@@ -24,13 +24,13 @@ class SongUploadView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class SongListView(ListAPIView):
-    queryset = Songs.objects.all()
-    serializer_class = SongsSerializer
+    queryset = Song.objects.all()
+    serializer_class = SongSerializer
 
 class SongDeleteView(APIView):
     def delete(self, request, song_id):
         # Lấy bài hát từ cơ sở dữ liệu
-        song = get_object_or_404(Songs, song_id=song_id)
+        song = get_object_or_404(Song, song_id=song_id)
         
         # Xóa file trên S3
         s3 = boto3.client(
@@ -48,7 +48,7 @@ class SongDeleteView(APIView):
         return Response({"message": "Song deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 class LatestSongsView(ListAPIView):
-    serializer_class = SongsSerializer
+    serializer_class = SongSerializer
 
     def get_queryset(self):
-        return Songs.objects.order_by(F('created_at').desc(nulls_last=True))[:8]
+        return Song.objects.order_by(F('created_at').desc(nulls_last=True))[:8]
