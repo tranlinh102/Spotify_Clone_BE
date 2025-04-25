@@ -74,7 +74,7 @@ class LoginView(TokenObtainPairView):
         refresh = serializer.validated_data['refresh']
         access = serializer.validated_data['access']
 
-        res = Response({'message': 'Login success', 'is_staff': serializer.user.is_staff, 'user_info': get_user_info(serializer.user)}, status=status.HTTP_200_OK)
+        res = Response({'message': 'Login success', 'is_staff': serializer.user.is_staff, 'access token': access, 'user_info': get_user_info(serializer.user)}, status=status.HTTP_200_OK)
         set_jwt_cookies(res, access_token=access, refresh_token=refresh)
         return res
 

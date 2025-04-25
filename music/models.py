@@ -9,9 +9,9 @@ class Artists(models.Model):
     bio = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(blank=True, null=True)
 
-    class Meta:
-        db_table = 'artists'
-        managed = False
+    # class Meta:
+    #     db_table = 'artists'
+    #     managed = False
 
 class Albums(models.Model):
     album_id = models.AutoField(primary_key=True)
@@ -19,9 +19,9 @@ class Albums(models.Model):
     created_by = models.ForeignKey(User, models.DO_NOTHING, db_column='created_by', blank=True, null=True)
     created_at = models.DateTimeField(blank=True, null=True)
 
-    class Meta:
-        db_table = 'albums'
-        managed = False
+    # class Meta:
+    #     db_table = 'albums'
+    #     managed = False
 
 class Songs(models.Model):
     song_id = models.AutoField(primary_key=True)
@@ -33,5 +33,5 @@ class Songs(models.Model):
     content_type = models.CharField(max_length=7)
     created_at = models.DateTimeField(blank=True, null=True)
 
-    class Meta:
-        db_table = 'songs'
+    # class Meta:
+    #     db_table = 'songs'
