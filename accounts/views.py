@@ -115,10 +115,12 @@ class LogoutView(APIView):
         res.delete_cookie(
             key='access_token',
             path='/',
+            samesite='None',
         )
         res.delete_cookie(
             key=settings.SIMPLE_JWT['AUTH_COOKIE'],  # refresh_token
             path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH'],
+            samesite='None',
         )
         return res
 
