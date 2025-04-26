@@ -105,7 +105,7 @@ class DownloadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Download
-        fields = ['id', 'user_id', 'song_id', 'added_at']
+        fields = ['id', 'user_id', 'song_id', 'downloaded_at']
 
 class FollowerSerializer(serializers.ModelSerializer):
     user_id = serializers.PrimaryKeyRelatedField(
