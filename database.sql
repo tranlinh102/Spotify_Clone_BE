@@ -92,7 +92,7 @@ CREATE TABLE `artist_songs` (
   KEY `artist_songs_song_id_32762766_fk_songs_song_id` (`song_id`),
   CONSTRAINT `artist_songs_artist_id_e8c6135e_fk_artists_artist_id` FOREIGN KEY (`artist_id`) REFERENCES `artists` (`artist_id`),
   CONSTRAINT `artist_songs_song_id_32762766_fk_songs_song_id` FOREIGN KEY (`song_id`) REFERENCES `songs` (`song_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -101,6 +101,7 @@ CREATE TABLE `artist_songs` (
 
 LOCK TABLES `artist_songs` WRITE;
 /*!40000 ALTER TABLE `artist_songs` DISABLE KEYS */;
+INSERT INTO `artist_songs` VALUES (1,1,'2025-04-27 00:00:00.000000',1,6),(2,1,'2025-04-27 00:00:00.000000',1,8),(3,1,'2025-04-27 00:00:00.000000',1,9),(10,1,'2025-04-27 00:00:00.000000',2,5),(11,1,'2025-04-27 00:00:00.000000',4,7),(12,1,'2025-04-27 00:00:00.000000',5,10);
 /*!40000 ALTER TABLE `artist_songs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -118,7 +119,7 @@ CREATE TABLE `artists` (
   `image` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `created_at` datetime(6) NOT NULL,
   PRIMARY KEY (`artist_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -127,6 +128,7 @@ CREATE TABLE `artists` (
 
 LOCK TABLES `artists` WRITE;
 /*!40000 ALTER TABLE `artists` DISABLE KEYS */;
+INSERT INTO `artists` VALUES (1,'Sơn Tùng MTP',NULL,NULL,'2025-04-04 00:00:00.000000'),(2,'The Sheep',NULL,NULL,'2025-04-04 00:00:00.000000'),(4,'The Cassette',NULL,NULL,'2025-04-04 00:00:00.000000'),(5,'Juniper Vale',NULL,NULL,'2025-04-04 00:00:00.000000');
 /*!40000 ALTER TABLE `artists` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -231,7 +233,7 @@ CREATE TABLE `auth_user` (
   `date_joined` datetime(6) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -240,7 +242,7 @@ CREATE TABLE `auth_user` (
 
 LOCK TABLES `auth_user` WRITE;
 /*!40000 ALTER TABLE `auth_user` DISABLE KEYS */;
-INSERT INTO `auth_user` VALUES (1,'pbkdf2_sha256$1000000$MfCZiazVVskGo083Oq7luL$xTU+FSVWrnPv1pMppwE4m34gAO59Tx/RxLKtIY7dD7o=',NULL,1,'admin','','','admin@gmail.com',1,1,'2025-04-21 15:34:16.582349'),(2,'pbkdf2_sha256$1000000$dzM2GoStTqrXRiBozaf6f2$TCaqmHBUcmnEytjKTUYP0W3SLr5LpvAALFvxenxDzaI=',NULL,0,'linh','','','linhtranvo2003@gmail.com',0,1,'2025-04-24 14:04:16.657189');
+INSERT INTO `auth_user` VALUES (1,'pbkdf2_sha256$1000000$MfCZiazVVskGo083Oq7luL$xTU+FSVWrnPv1pMppwE4m34gAO59Tx/RxLKtIY7dD7o=',NULL,1,'admin','','','admin@gmail.com',1,1,'2025-04-21 15:34:16.582349'),(2,'pbkdf2_sha256$1000000$dzM2GoStTqrXRiBozaf6f2$TCaqmHBUcmnEytjKTUYP0W3SLr5LpvAALFvxenxDzaI=',NULL,0,'linh','','','linhtranvo2003@gmail.com',0,1,'2025-04-24 14:04:16.657189'),(3,'pbkdf2_sha256$1000000$xVHDeVhXe0GGRryH8kfG9B$8lZ8GZciWyPxegEuP0sn1W3o1XpHGswDP7uAkU2fWOA=',NULL,0,'tri','','','tri@gmail.com',0,1,'2025-04-27 11:38:49.654941');
 /*!40000 ALTER TABLE `auth_user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -520,7 +522,7 @@ CREATE TABLE `playlist_songs` (
   KEY `playlist_songs_song_id_1f2a4faa_fk_songs_song_id` (`song_id`),
   CONSTRAINT `playlist_songs_playlist_id_99c5daf1_fk_playlists_playlist_id` FOREIGN KEY (`playlist_id`) REFERENCES `playlists` (`playlist_id`),
   CONSTRAINT `playlist_songs_song_id_1f2a4faa_fk_songs_song_id` FOREIGN KEY (`song_id`) REFERENCES `songs` (`song_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -529,6 +531,7 @@ CREATE TABLE `playlist_songs` (
 
 LOCK TABLES `playlist_songs` WRITE;
 /*!40000 ALTER TABLE `playlist_songs` DISABLE KEYS */;
+INSERT INTO `playlist_songs` VALUES (1,'2025-04-27 00:00:00.000000',1,6),(2,'2025-04-27 00:00:00.000000',1,8),(3,'2025-04-27 00:00:00.000000',1,9),(4,'2025-04-27 00:00:00.000000',2,10),(5,'2025-04-27 00:00:00.000000',2,13),(6,'2025-04-27 00:00:00.000000',3,5),(7,'2025-04-27 00:00:00.000000',3,7),(8,'2025-04-27 00:00:00.000000',3,11),(9,'2025-04-27 00:00:00.000000',3,9);
 /*!40000 ALTER TABLE `playlist_songs` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -548,7 +551,7 @@ CREATE TABLE `playlists` (
   PRIMARY KEY (`playlist_id`),
   KEY `playlists_created_by_id_e6261091_fk_auth_user_id` (`created_by_id`),
   CONSTRAINT `playlists_created_by_id_e6261091_fk_auth_user_id` FOREIGN KEY (`created_by_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -557,6 +560,7 @@ CREATE TABLE `playlists` (
 
 LOCK TABLES `playlists` WRITE;
 /*!40000 ALTER TABLE `playlists` DISABLE KEYS */;
+INSERT INTO `playlists` VALUES (1,'Nhạc Sơn Tùng MTP','image/R.jpg','2025-04-27 00:00:00.000000',2),(2,'Nhạc US/UK','image/anhdaidien1.jpg','2025-04-27 00:00:00.000000',3),(3,'Lofi',NULL,'2025-04-27 00:00:00.000000',2),(4,'Rap',NULL,'2025-04-27 00:00:00.000000',2);
 /*!40000 ALTER TABLE `playlists` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -576,7 +580,7 @@ CREATE TABLE `songs` (
   `content_type` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `created_at` datetime(6) NOT NULL,
   PRIMARY KEY (`song_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -585,7 +589,7 @@ CREATE TABLE `songs` (
 
 LOCK TABLES `songs` WRITE;
 /*!40000 ALTER TABLE `songs` DISABLE KEYS */;
-INSERT INTO `songs` VALUES (5,'Không cần','image/anhdaidien1.jpg','songs/không_cần.m4a','video/Lyrics____Không_Cần_Cover_-_the_SHEEP.mp4','podcast','2025-04-24 14:24:07.239854'),(6,'Đừng làm trái tim anh đau','image/R.jpg','songs/y2mate.com_-_SƠN_TÙNG_MTP__ĐỪNG_LÀM_TRÁI_TIM_ANH_ĐAU__OFFICIAL_MUSIC_VIDEO.mp3','video/y2mate.com_-_SƠN_TÙNG_MTP__ĐỪNG_LÀM_TRÁI_TIM_ANH_ĐAU__OFFICIAL_MUSIC_VIDEO_1080.mp4','music','2025-04-24 14:24:31.925363'),(7,'Tựa đêm nay','image/anh-dai-dien-bts_104204853.jpg','songs/videoplayback.m4a','video/The_Cassette_-_Tưa_Đêm_Nay_Official_Music_Video.mp4','music','2025-04-24 14:28:05.478361'),(8,'Có chắc đây là yêu','image/R_0nUbfw6.jpg','songs/SƠN_TÙNG_M-TP___CÓ_CHẮC_YÊU_LÀ_ĐÂY___OFFICIAL_MUSIC_VIDEO.mp4','video/y2mate.com_-_SƠN_TÙNG_MTP__CÓ_CHẮC_YÊU_LÀ_ĐÂY__OFFICIAL_MUSIC_VIDEO.mp3','music','2025-04-24 14:35:58.383287'),(9,'Nơi này có anh','image/R_XN2FdPy.jpg','songs/y2mate.com_-_youtube_video_FN7ALfpGxiI.mp3','video/y2mate.com_-_youtube_video_FN7ALfpGxiI_1080.mp4','music','2025-04-24 14:37:50.909683'),(10,'Juniper Vale','image/R_zWMwoy1.jpg','songs/JuniperVale.m4a','video/Juniper_Vale_-_Fractions_Official_Audio.mp4','music','2025-04-24 14:39:29.345395'),(11,'Phép màu','image/R_YkNMqGj.jpg','songs/y2mate.com_-_Phép_Màu_Đàn_Cá_Gỗ_OST__MAYDAYs_ft_Minh_Tốc__Official_Lyric_Video.mp3','video/y2mate.com_-_Phép_Màu_Đàn_Cá_Gỗ_OST__MAYDAYs_ft_Minh_Tốc__Official_Lyric_Video_360.mp4','music','2025-04-24 14:40:02.973529'),(12,'I\'m Not Her','image/anh-dai-dien-facebook-doc_104205828.jpg','songs/Vietsub__Lyrics_Im_Not_Her_-_Clara_Mae.mp4','video/Im_not_her.m4a','music','2025-04-24 14:44:27.856111');
+INSERT INTO `songs` VALUES (5,'Không cần','image/anhdaidien1.jpg','songs/không_cần.m4a','video/Lyrics____Không_Cần_Cover_-_the_SHEEP.mp4','podcast','2025-04-24 14:24:07.239854'),(6,'Đừng làm trái tim anh đau','image/R.jpg','songs/y2mate.com_-_SƠN_TÙNG_MTP__ĐỪNG_LÀM_TRÁI_TIM_ANH_ĐAU__OFFICIAL_MUSIC_VIDEO.mp3','video/y2mate.com_-_SƠN_TÙNG_MTP__ĐỪNG_LÀM_TRÁI_TIM_ANH_ĐAU__OFFICIAL_MUSIC_VIDEO_1080.mp4','music','2025-04-24 14:24:31.925363'),(7,'Tựa đêm nay','image/anh-dai-dien-bts_104204853.jpg','songs/videoplayback.m4a','video/The_Cassette_-_Tưa_Đêm_Nay_Official_Music_Video.mp4','music','2025-04-24 14:28:05.478361'),(8,'Có chắc đây là yêu','image/R_0nUbfw6.jpg','songs/SƠN_TÙNG_M-TP___CÓ_CHẮC_YÊU_LÀ_ĐÂY___OFFICIAL_MUSIC_VIDEO.mp4','video/y2mate.com_-_SƠN_TÙNG_MTP__CÓ_CHẮC_YÊU_LÀ_ĐÂY__OFFICIAL_MUSIC_VIDEO.mp3','music','2025-04-24 14:35:58.383287'),(9,'Nơi này có anh','image/R_XN2FdPy.jpg','songs/y2mate.com_-_youtube_video_FN7ALfpGxiI.mp3','video/y2mate.com_-_youtube_video_FN7ALfpGxiI_1080.mp4','music','2025-04-24 14:37:50.909683'),(10,'Fractions','image/R_zWMwoy1.jpg','songs/JuniperVale.m4a','video/Juniper_Vale_-_Fractions_Official_Audio.mp4','music','2025-04-24 14:39:29.345395'),(11,'Phép màu','image/R_YkNMqGj.jpg','songs/y2mate.com_-_Phép_Màu_Đàn_Cá_Gỗ_OST__MAYDAYs_ft_Minh_Tốc__Official_Lyric_Video.mp3','video/y2mate.com_-_Phép_Màu_Đàn_Cá_Gỗ_OST__MAYDAYs_ft_Minh_Tốc__Official_Lyric_Video_360.mp4','music','2025-04-24 14:40:02.973529'),(13,'I\'m Not Her','image/anh-dai-dien-facebook-doc_104205828.jpg','songs/Vietsub__Lyrics_Im_Not_Her_-_Clara_Mae.mp4','video/Im_not_her.m4a','music','2025-04-25 16:03:48.827827');
 /*!40000 ALTER TABLE `songs` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -598,4 +602,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-24 21:45:35
+-- Dump completed on 2025-04-27 19:35:41

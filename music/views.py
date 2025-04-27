@@ -9,8 +9,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import ListAPIView
-from manager.models import Song
-from manager.serializers import SongSerializer
+from manager.models import Song, Playlist, PlaylistSong
+from manager.serializers import SongSerializer, PlaylistSerializer
 
 class SongUploadView(APIView):
     def post(self, request):
@@ -54,3 +54,16 @@ class LatestSongsView(ListAPIView):
         return Song.objects.prefetch_related('artistsong_set__artist').order_by(
             F('created_at').desc(nulls_last=True)
         )[:8]
+
+class LatestPlaylistsView(ListAPIView):
+    serializer_class = PlaylistSerializer
+
+    def get_queryset(self):
+        return Playlist.objects.select_related('created_by').order_by(F('created_at').desc(nulls_last=True))[:4]
+
+class PlaylistSongsView(ListAPIView):
+    serializer_class = SongSerializer
+
+    def get_queryset(self):
+        playlist_id = self.kwargs.get('playlist_id')  # Lấy playlist_id từ URL
+        return Song.objects.filter(playlistsong__playlist_id=playlist_id).prefetch_related('artistsong_set__artist')
