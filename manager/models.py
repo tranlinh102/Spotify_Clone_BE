@@ -69,7 +69,7 @@ class Song(models.Model):
     
     def get_artists(self):
         return self.artistsong_set.select_related('artist').values('artist__artist_id', 'artist__name', 'artist__image')
-    
+
     class Meta:
         db_table = 'songs'
 
