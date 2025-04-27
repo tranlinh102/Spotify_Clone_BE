@@ -33,9 +33,14 @@ class AlbumSerializer(serializers.ModelSerializer):
         fields = ['album_id', 'title', 'image', 'artist_id', 'created_at']
 
 class SongSerializer(serializers.ModelSerializer):
+    artists = serializers.SerializerMethodField()
     class Meta:
         model = Song
         fields = '__all__'
+
+    def get_artists(self, obj):
+        artist_songs = obj.artistsong_set.all()
+        return ArtistSerializer([artist_song.artist for artist_song in artist_songs], many=True).data
 
 class ArtistSongSerializer(serializers.ModelSerializer):
     artist_id = serializers.PrimaryKeyRelatedField(
