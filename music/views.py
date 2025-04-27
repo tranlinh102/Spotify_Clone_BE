@@ -51,4 +51,6 @@ class LatestSongsView(ListAPIView):
     serializer_class = SongSerializer
 
     def get_queryset(self):
-        return Song.objects.order_by(F('created_at').desc(nulls_last=True))[:8]
+        return Song.objects.prefetch_related('artistsong_set__artist').order_by(
+            F('created_at').desc(nulls_last=True)
+        )[:8]

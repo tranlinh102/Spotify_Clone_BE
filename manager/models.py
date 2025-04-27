@@ -67,6 +67,9 @@ class Song(models.Model):
         # Gọi delete gốc
         super().delete(*args, **kwargs)
     
+    def get_artists(self):
+        return self.artistsong_set.select_related('artist').values('artist__artist_id', 'artist__name', 'artist__image')
+    
     class Meta:
         db_table = 'songs'
 
