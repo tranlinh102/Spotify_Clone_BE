@@ -30,7 +30,7 @@ class SongSerializer(serializers.ModelSerializer):
     artists = serializers.SerializerMethodField()
     class Meta:
         model = Song
-        fields = ['song_id', 'title', 'image', 'file_path', 'created_at', 'artists']
+        fields = '__all__'
 
     def get_artists(self, obj):
         artist_songs = obj.artistsong_set.all()
