@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
 class PlaylistSerializer(serializers.ModelSerializer):
     created_by_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
-        source='create_by'  # Ánh xạ với trường 'create_by' trong model playlist
+        source='created_by'  # Ánh xạ với trường 'create_by' trong model playlist
     )
 
     class Meta:

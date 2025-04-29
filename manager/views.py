@@ -16,6 +16,8 @@ from django.conf import settings
 from decouple import config
 from rest_framework.decorators import action
 from botocore.exceptions import PartialCredentialsError
+from rest_framework.permissions import AllowAny
+from django.db.models import Count
 
 
 class PlaylistViewSet(viewsets.ModelViewSet):
@@ -98,6 +100,7 @@ class PlaylistViewSet(viewsets.ModelViewSet):
 class ArtistViewSet(viewsets.ModelViewSet):
     queryset = Artist.objects.all()
     serializer_class = ArtistSerializer
+    permission_classes = [AllowAny]
 
     def get_s3_client(self):
         return boto3.client(
@@ -106,6 +109,19 @@ class ArtistViewSet(viewsets.ModelViewSet):
             aws_secret_access_key=config('AWS_SECRET_ACCESS_KEY'),
             region_name=config('AWS_S3_REGION_NAME', default='ap-southeast-1')
         )
+
+    @action(detail=False, methods=['get'], url_path='count')
+    def count_artists(self, request):
+        try:
+            total_artists = Artist.objects.count()  # Đếm tổng số nghệ sĩ
+            return Response({
+                "message": "Total artists count retrieved successfully",
+                "total_artists": total_artists
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                "error": f"Failed to retrieve artists count: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['post'], url_path='add')
     def add_artist(self, request, *args, **kwargs):
@@ -184,6 +200,7 @@ class ArtistViewSet(viewsets.ModelViewSet):
 class AlbumViewSet(viewsets.ModelViewSet):
     queryset = Album.objects.all()
     serializer_class = AlbumSerializer
+    permission_classes  = [AllowAny]
 
     def get_s3_client(self):
         return boto3.client(
@@ -264,6 +281,7 @@ class AlbumViewSet(viewsets.ModelViewSet):
 class SongViewSet(viewsets.ModelViewSet):
     queryset = Song.objects.all()
     serializer_class = SongSerializer
+    permission_classes = [AllowAny]
 
     def get_s3_client(self):
         return boto3.client(
@@ -672,6 +690,27 @@ class MessageViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({
                 "error": f"Failed to update message: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class MostFollowedArtistsView(APIView):
+    """
+    API để lấy danh sách nghệ sĩ được yêu thích nhất dựa trên số lượng người theo dõi.
+    """
+    def get(self, request, *args, **kwargs):
+        try:
+            # Đếm số lượng người theo dõi cho mỗi nghệ sĩ
+            artists = Artist.objects.annotate(follower_count=Count('follower')).order_by('-follower_count')
+
+            # Serialize dữ liệu
+            serializer = ArtistSerializer(artists, many=True)
+
+            return Response({
+                "message": "Most followed artists retrieved successfully",
+                "artists": serializer.data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                "error": f"Failed to retrieve most followed artists: {str(e)}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # Create your views here.
