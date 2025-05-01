@@ -1,7 +1,7 @@
 from django.urls import path
 
 from music.views import SongUploadView
-from .views import SongDeleteView, SongListView, LatestSongsView, LatestPlaylistsView, PlaylistSongsView
+from .views import *
 
 urlpatterns = [
     path('add-song/', SongUploadView.as_view(), name='SongUploadView'),
@@ -9,4 +9,14 @@ urlpatterns = [
     path('songs/<int:song_id>/', SongDeleteView.as_view(), name='song-delete'),
     path('playlistsSuggested/', LatestPlaylistsView.as_view(), name='latest-playlists'),
     path('playlists/<int:playlist_id>/songs/', PlaylistSongsView.as_view(), name='playlist-songs'),
+    path('playlists/create/', CreatePlaylistView.as_view(), name='create-playlist'),
+    path('playlists/user/', UserPlaylistsView.as_view(), name='user-playlists'),
+    path('playlists/add-song/', AddSongToPlaylistView.as_view(), name='add-song-to-playlist'),
+    path('artists/followed/', UserFollowedArtistsView.as_view(), name='user-followed-artists'),
+    path('artists/follow/', FollowArtistView.as_view(), name='follow-artist'),
+    path('artists/unfollow/', UnfollowArtistView.as_view(), name='unfollow-artist'),
+    path('playlists/remove-song/', RemoveSongFromPlaylistView.as_view(), name='remove-song-from-playlist'),
+    path('songs/favorites/', UserFavoriteSongsView.as_view(), name='user-favorite-songs'),
+    path('songs/favorites/add/', AddSongToFavoritesView.as_view(), name='add-song-to-favorites'),
+    path('songs/favorites/remove/', RemoveSongFromFavoritesView.as_view(), name='remove-song-from-favorites'),
 ]
