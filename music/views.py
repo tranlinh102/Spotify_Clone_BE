@@ -23,10 +23,6 @@ class SongUploadView(APIView):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class SongListView(ListAPIView):
-    queryset = Song.objects.all()
-    serializer_class = SongSerializer
-
 class SongDeleteView(APIView):
     def delete(self, request, song_id):
         # Lấy bài hát từ cơ sở dữ liệu
@@ -195,3 +191,18 @@ class RemoveSongFromFavoritesView(APIView):
         # Xóa bài hát khỏi danh sách yêu thích
         favorite.delete()
         return Response({"message": "Song removed from favorites successfully"}, status=status.HTTP_200_OK)
+
+class PlaylistDetailView(APIView):
+    def get(self, request, playlist_id):
+        # Lấy thông tin playlist
+        playlist = get_object_or_404(Playlist, playlist_id=playlist_id)
+        playlist_serializer = PlaylistSerializer(playlist)
+
+        # Lấy danh sách bài hát trong playlist (tận dụng PlaylistSongsView)
+        songs = Song.objects.filter(playlistsong__playlist_id=playlist_id).prefetch_related('artistsong_set__artist')
+        songs_serializer = SongSerializer(songs, many=True)
+
+        return Response({
+            "playlist": playlist_serializer.data,
+            "songs": songs_serializer.data
+        }, status=status.HTTP_200_OK)
