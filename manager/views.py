@@ -256,7 +256,7 @@ class AlbumViewSet(viewsets.ModelViewSet):
             image_file = request.FILES.get('image')
 
             # Nếu có ảnh mới, xóa ảnh cũ
-            if image_file and album.image:
+            if image_file and album.image and album.image.name:
                 try:
                     bucket_name = config('AWS_STORAGE_BUCKET_NAME')
                     old_file_path = album.image.name
@@ -468,6 +468,7 @@ class PlaylistSongViewSet(viewsets.ModelViewSet):
 class AlbumSongViewSet(viewsets.ModelViewSet):
     queryset = AlbumSong.objects.all()
     serializer_class = AlbumSongSerializer
+    permission_classes = [AllowAny]
 
     @action(detail=False, methods=['post'], url_path='add')
     def add_album_song(self, request):
