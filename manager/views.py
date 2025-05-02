@@ -23,6 +23,7 @@ from django.db.models import Count
 class PlaylistViewSet(viewsets.ModelViewSet):
     queryset = Playlist.objects.all()
     serializer_class = PlaylistSerializer
+    permission_classes = [AllowAny]
 
     def get_s3_client(self):
         return boto3.client(
@@ -315,6 +316,19 @@ class SongViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": f"Failed to create song: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+    @action(detail=True, methods=['get'], url_path='detail')
+    def get_song_by_id(self, request, pk=None):
+        try:
+            song = self.get_queryset().filter(pk=pk).first()
+            if not song:
+                return Response({"error": "Không tìm thấy bài hát"}, status=status.HTTP_404_NOT_FOUND)
+            
+            serializer = self.get_serializer(song)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": f"Lỗi khi lấy bài hát: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     @action(detail=True, methods=['put'], url_path='update')
     def update_song(self, request, pk=None):
         try:
@@ -380,6 +394,7 @@ class SongViewSet(viewsets.ModelViewSet):
 class ArtistSongViewSet(viewsets.ModelViewSet):
     queryset = ArtistSong.objects.all()
     serializer_class = ArtistSongSerializer
+    permission_classes = [AllowAny]
 
     @action(detail=False, methods=['post'], url_path='add')
     def add_artist_song(self, request):
@@ -424,7 +439,8 @@ class ArtistSongViewSet(viewsets.ModelViewSet):
 class PlaylistSongViewSet(viewsets.ModelViewSet):
     queryset = PlaylistSong.objects.all()
     serializer_class = PlaylistSongSerializer
-
+    permission_classes = [AllowAny]
+    
     @action(detail=False, methods=['post'], url_path='add')
     def add_playlist_song(self, request):
         try:
@@ -468,6 +484,7 @@ class PlaylistSongViewSet(viewsets.ModelViewSet):
 class AlbumSongViewSet(viewsets.ModelViewSet):
     queryset = AlbumSong.objects.all()
     serializer_class = AlbumSongSerializer
+    permission_classes = [AllowAny]
 
     @action(detail=False, methods=['post'], url_path='add')
     def add_album_song(self, request):
