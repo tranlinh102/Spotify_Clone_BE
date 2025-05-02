@@ -434,7 +434,7 @@ CREATE TABLE `favorites` (
   KEY `favorites_song_id_b4ee1f74_fk_songs_song_id` (`song_id`),
   CONSTRAINT `favorites_song_id_b4ee1f74_fk_songs_song_id` FOREIGN KEY (`song_id`) REFERENCES `songs` (`song_id`),
   CONSTRAINT `favorites_user_id_d60eb79f_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -443,6 +443,7 @@ CREATE TABLE `favorites` (
 
 LOCK TABLES `favorites` WRITE;
 /*!40000 ALTER TABLE `favorites` DISABLE KEYS */;
+INSERT INTO `favorites` VALUES (2,'2025-05-01 08:22:02.345496',2,5);
 /*!40000 ALTER TABLE `favorites` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -463,7 +464,7 @@ CREATE TABLE `followers` (
   KEY `followers_artist_id_560f1ea7_fk_artists_artist_id` (`artist_id`),
   CONSTRAINT `followers_artist_id_560f1ea7_fk_artists_artist_id` FOREIGN KEY (`artist_id`) REFERENCES `artists` (`artist_id`),
   CONSTRAINT `followers_user_id_556252d5_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -472,6 +473,7 @@ CREATE TABLE `followers` (
 
 LOCK TABLES `followers` WRITE;
 /*!40000 ALTER TABLE `followers` DISABLE KEYS */;
+INSERT INTO `followers` VALUES (2,'2025-05-01 06:22:23.523693',1,2);
 /*!40000 ALTER TABLE `followers` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -522,7 +524,7 @@ CREATE TABLE `playlist_songs` (
   KEY `playlist_songs_song_id_1f2a4faa_fk_songs_song_id` (`song_id`),
   CONSTRAINT `playlist_songs_playlist_id_99c5daf1_fk_playlists_playlist_id` FOREIGN KEY (`playlist_id`) REFERENCES `playlists` (`playlist_id`),
   CONSTRAINT `playlist_songs_song_id_1f2a4faa_fk_songs_song_id` FOREIGN KEY (`song_id`) REFERENCES `songs` (`song_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -551,7 +553,7 @@ CREATE TABLE `playlists` (
   PRIMARY KEY (`playlist_id`),
   KEY `playlists_created_by_id_e6261091_fk_auth_user_id` (`created_by_id`),
   CONSTRAINT `playlists_created_by_id_e6261091_fk_auth_user_id` FOREIGN KEY (`created_by_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -560,7 +562,7 @@ CREATE TABLE `playlists` (
 
 LOCK TABLES `playlists` WRITE;
 /*!40000 ALTER TABLE `playlists` DISABLE KEYS */;
-INSERT INTO `playlists` VALUES (1,'Nhạc Sơn Tùng MTP','image/R.jpg','2025-04-27 00:00:00.000000',2),(2,'Nhạc US/UK','image/anhdaidien1.jpg','2025-04-27 00:00:00.000000',3),(3,'Lofi',NULL,'2025-04-27 00:00:00.000000',2),(4,'Rap',NULL,'2025-04-27 00:00:00.000000',2);
+INSERT INTO `playlists` VALUES (1,'Nhạc Sơn Tùng MTP','image/R.jpg','2025-04-27 00:00:00.000000',2),(2,'Nhạc US/UK','image/anhdaidien1.jpg','2025-04-27 00:00:00.000000',3),(3,'Lofi',NULL,'2025-04-27 00:00:00.000000',2),(4,'Rap',NULL,'2025-04-27 00:00:00.000000',2),(5,'My New Playlist','image/anhdaidien4.jpg','2025-05-01 05:44:53.765085',2);
 /*!40000 ALTER TABLE `playlists` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -602,4 +604,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-27 19:35:41
+-- Dump completed on 2025-05-02 20:22:50
