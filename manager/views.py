@@ -176,6 +176,23 @@ class ArtistViewSet(viewsets.ModelViewSet):
             region_name=config('AWS_S3_REGION_NAME', default='ap-southeast-1')
         )
 
+    @action(detail=False, methods=['get'], url_path='top-followed')
+    def top_followed_artists(self, request):
+        try:
+            top_artists = Artist.objects.annotate(
+                follower_count=Count('follower')
+            ).order_by('-follower_count')
+
+            serializer = self.get_serializer(top_artists, many=True)
+            return Response({
+                "message": "Top followed artists retrieved successfully",
+                "artists": serializer.data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                "error": f"Failed to retrieve top followed artists: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     @action(detail=False, methods=['get'], url_path='count')
     def count_artists(self, request):
         try:
@@ -369,6 +386,23 @@ class SongViewSet(viewsets.ModelViewSet):
             aws_secret_access_key=config('AWS_SECRET_ACCESS_KEY'),
             region_name=config('AWS_S3_REGION_NAME', default='ap-southeast-1')
         )
+
+    @action(detail=False, methods=['get'], url_path='top-favourite')
+    def top_favorite_songs(self, request):
+        try:
+            top_songs = (
+                Song.objects.annotate(favorite_count=Count('favorite'))
+                .order_by('-favorite_count')[:10]  # Lấy top 10 bài hát
+            )
+            serializer = self.get_serializer(top_songs, many=True)
+            return Response({
+                "message": "Top favorite songs retrieved successfully",
+                "songs": serializer.data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                "error": f"Failed to retrieve top favorite songs: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['get'], url_path='count')
     def count_song(self, request):

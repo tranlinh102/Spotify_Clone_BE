@@ -18,6 +18,7 @@ class PlaylistSerializer(serializers.ModelSerializer):
         fields = ['playlist_id', 'title', 'image', 'created_by_id', 'created_at']
 
 class ArtistSerializer(serializers.ModelSerializer):
+    follower_count = serializers.IntegerField(read_only=True)
     class Meta:
         model = Artist
         fields = '__all__'
