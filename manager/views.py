@@ -6,7 +6,7 @@ from .serializers import (
     PlaylistSerializer,ArtistSerializer, AlbumSongSerializer, 
     AlbumSerializer, SongSerializer, FavoriteSerializer, 
     DownloadSerializer, AlbumSongSerializer, FollowerSerializer, 
-    MessageSerializer, ArtistSongSerializer, PlaylistSongSerializer)
+    MessageSerializer, ArtistSongSerializer, PlaylistSongSerializer, UserSerializer)
 import boto3
 from botocore.exceptions import ClientError
 from rest_framework.response import Response
@@ -18,7 +18,60 @@ from rest_framework.decorators import action
 from botocore.exceptions import PartialCredentialsError
 from rest_framework.permissions import AllowAny
 from django.db.models import Count
+from django.contrib.auth.models import User
 
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
+
+    @action(detail=False, methods=['post'], url_path='add')
+    def create_user(self, request):
+        try:
+            username = request.data.get('username')
+            email = request.data.get('email')
+
+            if not username or not email:
+                return Response({'error': 'Username và Email là bắt buộc'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if User.objects.filter(username=username).exists():
+                return Response({'error': 'Username đã tồn tại'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Tạo user với mật khẩu mặc định là "123"
+            user = User.objects.create_user(username=username, email=email, password='123')
+            serializer = self.get_serializer(user)
+
+            return Response({'message': 'Tạo user thành công', 'user': serializer.data}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': f'Lỗi tạo user: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['put'], url_path='update')
+    def update_user(self, request, pk=None):
+        try:
+            user = self.get_object()
+            serializer = self.get_serializer(user, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response({'message': 'Cập nhật user thành công', 'user': serializer.data}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': f'Lỗi cập nhật user: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['delete'], url_path='delete')
+    def delete_user(self, request, pk=None):
+        try:
+            user = self.get_object()
+            user.delete()
+            return Response({'message': 'Xóa user thành công'}, status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({'error': f'Lỗi xóa user: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['get'], url_path='count')
+    def count_users(self, request):
+        try:
+            total = User.objects.count()
+            return Response({'total_users': total}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class PlaylistViewSet(viewsets.ModelViewSet):
     queryset = Playlist.objects.all()
