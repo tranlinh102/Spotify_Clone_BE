@@ -85,6 +85,19 @@ class PlaylistViewSet(viewsets.ModelViewSet):
             region_name=config('AWS_S3_REGION_NAME', default='ap-southeast-1')
         )
 
+    @action(detail=False, methods=['get'], url_path='count')
+    def count_playlists(self, request):
+        try:
+            total_playlists = Playlist.objects.count()
+            return Response({
+                "message": "Total playlists count retrieved successfully",
+                "total_playlists": total_playlists
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                "error": f"Failed to retrieve playlists count: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     @action(detail=False, methods=['post'], url_path='add')
     def add_playlist(self, request):
         try:
@@ -263,6 +276,19 @@ class AlbumViewSet(viewsets.ModelViewSet):
             region_name=config('AWS_S3_REGION_NAME', default='ap-southeast-1')
         )
 
+    @action(detail=False, methods=['get'], url_path='count')
+    def count_album(self, request):
+        try:
+            total_albums = Album.objects.count()
+            return Response({
+                "message": "Total albums count retrieved successfully",
+                "total_albums": total_albums
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                "error": f"Failed to retrieve album count: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     @action(detail=False, methods=['post'], url_path='add')
     def add_album(self, request):
         try:
@@ -343,6 +369,19 @@ class SongViewSet(viewsets.ModelViewSet):
             aws_secret_access_key=config('AWS_SECRET_ACCESS_KEY'),
             region_name=config('AWS_S3_REGION_NAME', default='ap-southeast-1')
         )
+
+    @action(detail=False, methods=['get'], url_path='count')
+    def count_song(self, request):
+        try:
+            total_songs = Song.objects.count()
+            return Response({
+                "message": "Total songs count retrieved successfully",
+                "total_songs": total_songs
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                "error": f"Failed to retrieve song count: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['post'], url_path='add')
     def add_song(self, request, *args, **kwargs):
