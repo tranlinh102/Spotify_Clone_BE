@@ -675,29 +675,48 @@ class AlbumSongViewSet(viewsets.ModelViewSet):
     serializer_class = AlbumSongSerializer
     permission_classes = [AllowAny]
 
-    @action(detail=False, methods=['get'], url_path='by-album')
-    def get_songs_by_album(self, request):
+    def get_queryset(self):
+        album_id = self.request.query_params.get('album_id')
+        if album_id:
+            return AlbumSong.objects.filter(album_id=album_id)
+        return AlbumSong.objects.all()
+    
+    @action(detail=False, methods=['get'], url_path='not-in-album-by-artist')
+    def get_songs_not_in_album_but_by_album_artist(self, request):
         album_id = request.query_params.get('album_id')
         if not album_id:
             return Response({"error": "album_id is required"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         try:
-            # Lấy các bài hát từ album
-            album_songs = AlbumSong.objects.filter(album_id=album_id).select_related('song')
-            songs = [album_song.song for album_song in album_songs]
-            
-            # Serialize dữ liệu chỉ lấy thông tin bài hát
+            # Bước 1: Lấy các song_id trong album
+            album_song_ids = AlbumSong.objects.filter(album_id=album_id).values_list('song_id', flat=True)
+
+            # Bước 2: Lấy artist_id của album
+            album = Album.objects.get(album_id=album_id)
+            artist_id = album.artist_id  # giả sử Album có khóa ngoại: artist = models.ForeignKey(Artist, ...)
+
+            # Bước 3: Lấy tất cả bài hát của artist
+            artist_song_ids = ArtistSong.objects.filter(artist_id=artist_id).values_list('song_id', flat=True).distinct()
+
+            # Bước 4: Loại bỏ bài hát đã thuộc album
+            result_song_ids = list(set(artist_song_ids) - set(album_song_ids))
+
+            # Bước 5: Lấy dữ liệu bài hát
+            songs = Song.objects.filter(song_id__in=result_song_ids)
+
+            from .serializers import SongSerializer
             serializer = SongSerializer(songs, many=True)
 
             return Response({
-                "message": "Songs retrieved successfully",
+                "message": "Songs by album's artist but not in album retrieved successfully",
                 "songs": serializer.data
             }, status=status.HTTP_200_OK)
 
+        except Album.DoesNotExist:
+            return Response({"error": "Album not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            return Response({
-                "error": f"Failed to retrieve songs: {str(e)}"
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
     @action(detail=False, methods=['post'], url_path='add')
     def add_album_song(self, request):
