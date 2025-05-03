@@ -20,6 +20,7 @@ from rest_framework.permissions import AllowAny
 from django.db.models import Count
 from django.contrib.auth.models import User
 
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -76,6 +77,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class PlaylistViewSet(viewsets.ModelViewSet):
     queryset = Playlist.objects.all()
     serializer_class = PlaylistSerializer
+    permission_classes = [AllowAny]
 
     def get_s3_client(self):
         return boto3.client(
@@ -162,7 +164,23 @@ class PlaylistViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": f"Failed to update playlist: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)    
-        
+    
+    @action(detail=False, methods=['get'], url_path='search')
+    def search_by_title(self, request):
+        try:
+            title_query = request.query_params.get('title', '').strip()
+            if not title_query:
+                return Response({"error": "Query parameter 'title' is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+            playlists = Playlist.objects.filter(title__icontains=title_query)
+            serializer = self.get_serializer(playlists, many=True)
+            return Response({
+                "message": "Search results",
+                "results": serializer.data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": f"Failed to search playlists: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
+   
 class ArtistViewSet(viewsets.ModelViewSet):
     queryset = Artist.objects.all()
     serializer_class = ArtistSerializer
@@ -280,6 +298,24 @@ class ArtistViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": f"Failed to update artist: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @action(detail=False, methods=['get'], url_path='search')
+    def search_artist(self, request):
+        try:
+            name_query = request.query_params.get('name', '').strip()
+            if not name_query:
+                return Response({"error": "Query parameter 'name' is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+            artists = Artist.objects.filter(name__icontains=name_query)
+            serializer = self.get_serializer(artists, many=True)
+            return Response({
+                "message": "Search results",
+                "results": serializer.data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                "error": f"Failed to search artists: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class AlbumViewSet(viewsets.ModelViewSet):
     queryset = Album.objects.all()
     serializer_class = AlbumSerializer
@@ -373,6 +409,24 @@ class AlbumViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response({"error": f"Failed to update album: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['get'], url_path='search')
+    def search_album(self, request):
+        try:
+            title_query = request.query_params.get('title', '').strip()
+            if not title_query:
+                return Response({"error": "Query parameter 'title' is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+            albums = Album.objects.filter(title__icontains=title_query)
+            serializer = self.get_serializer(albums, many=True)
+            return Response({
+                "message": "Search results",
+                "results": serializer.data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                "error": f"Failed to search albums: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class SongViewSet(viewsets.ModelViewSet):
     queryset = Song.objects.all()
@@ -503,9 +557,33 @@ class SongViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": f"Failed to delete song: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @action(detail=False, methods=['get'], url_path='search')
+    def search_song(self, request):
+        try:
+            title_query = request.query_params.get('title', '').strip()
+            if not title_query:
+                return Response(
+                    {"error": "Query parameter 'title' is required."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            songs = Song.objects.filter(title__icontains=title_query)
+            serializer = self.get_serializer(songs, many=True)
+            return Response({
+                "message": "Search results",
+                "results": serializer.data
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to search songs: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 class ArtistSongViewSet(viewsets.ModelViewSet):
     queryset = ArtistSong.objects.all()
     serializer_class = ArtistSongSerializer
+    permission_classes = [AllowAny]
 
     @action(detail=False, methods=['post'], url_path='add')
     def add_artist_song(self, request):
@@ -550,6 +628,7 @@ class ArtistSongViewSet(viewsets.ModelViewSet):
 class PlaylistSongViewSet(viewsets.ModelViewSet):
     queryset = PlaylistSong.objects.all()
     serializer_class = PlaylistSongSerializer
+    permission_classes = [AllowAny]
 
     @action(detail=False, methods=['post'], url_path='add')
     def add_playlist_song(self, request):
@@ -596,6 +675,30 @@ class AlbumSongViewSet(viewsets.ModelViewSet):
     serializer_class = AlbumSongSerializer
     permission_classes = [AllowAny]
 
+    @action(detail=False, methods=['get'], url_path='by-album')
+    def get_songs_by_album(self, request):
+        album_id = request.query_params.get('album_id')
+        if not album_id:
+            return Response({"error": "album_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Lấy các bài hát từ album
+            album_songs = AlbumSong.objects.filter(album_id=album_id).select_related('song')
+            songs = [album_song.song for album_song in album_songs]
+            
+            # Serialize dữ liệu chỉ lấy thông tin bài hát
+            serializer = SongSerializer(songs, many=True)
+
+            return Response({
+                "message": "Songs retrieved successfully",
+                "songs": serializer.data
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({
+                "error": f"Failed to retrieve songs: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     @action(detail=False, methods=['post'], url_path='add')
     def add_album_song(self, request):
         try:
@@ -639,6 +742,7 @@ class AlbumSongViewSet(viewsets.ModelViewSet):
 class FavoriteViewSet(viewsets.ModelViewSet):
     queryset = Favorite.objects.all()
     serializer_class = FavoriteSerializer
+    permission_classes = [AllowAny]
 
     @action(detail=False, methods=['post'], url_path='add')
     def add_favorite(self, request):
@@ -683,6 +787,7 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 class DownloadViewSet(viewsets.ModelViewSet):
     queryset = Download.objects.all()
     serializer_class = DownloadSerializer
+    permission_classes = [AllowAny]
 
     @action(detail=False, methods=['post'], url_path='add')
     def add_download(self, request):
@@ -727,6 +832,7 @@ class DownloadViewSet(viewsets.ModelViewSet):
 class FollowerViewSet(viewsets.ModelViewSet):
     queryset = Follower.objects.all()
     serializer_class = FollowerSerializer
+    permission_classes = [AllowAny]
 
     @action(detail=False, methods=['post'], url_path='add')
     def add_follower(self, request):
@@ -819,25 +925,6 @@ class MessageViewSet(viewsets.ModelViewSet):
                 "error": f"Failed to update message: {str(e)}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class MostFollowedArtistsView(APIView):
-    """
-    API để lấy danh sách nghệ sĩ được yêu thích nhất dựa trên số lượng người theo dõi.
-    """
-    def get(self, request, *args, **kwargs):
-        try:
-            # Đếm số lượng người theo dõi cho mỗi nghệ sĩ
-            artists = Artist.objects.annotate(follower_count=Count('follower')).order_by('-follower_count')
 
-            # Serialize dữ liệu
-            serializer = ArtistSerializer(artists, many=True)
-
-            return Response({
-                "message": "Most followed artists retrieved successfully",
-                "artists": serializer.data
-            }, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({
-                "error": f"Failed to retrieve most followed artists: {str(e)}"
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # Create your views here.
