@@ -165,10 +165,11 @@ class ChatRoomSerializer(serializers.ModelSerializer):
 class ChatRoomWithLastMessageSerializer(serializers.ModelSerializer):
     last_message = serializers.SerializerMethodField()
     other_user_id = serializers.SerializerMethodField()
+    other_user_name = serializers.SerializerMethodField()  # Thêm trường này
 
     class Meta:
         model = ChatRoom
-        fields = ['id', 'other_user_id', 'last_message']
+        fields = ['id', 'other_user_id', 'other_user_name', 'last_message']
 
     def get_last_message(self, obj):
         # Lấy tin nhắn mới nhất trong ChatRoom
@@ -189,7 +190,14 @@ class ChatRoomWithLastMessageSerializer(serializers.ModelSerializer):
         if obj.user1 == request_user:
             return obj.user2.id
         return obj.user1.id
-    
+
+    def get_other_user_name(self, obj):
+        # Lấy tên của người còn lại trong ChatRoom
+        request_user = self.context['request'].user
+        if obj.user1 == request_user:
+            return obj.user2.username
+        return obj.user1.username
+     
 @sync_to_async
 def save_serializer(serializer_class, data):
     serializer = serializer_class(data=data)
