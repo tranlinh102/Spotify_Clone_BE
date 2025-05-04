@@ -21,4 +21,5 @@ urlpatterns = [
     path('api/manager/', include('manager.urls')),
     path('api/admindashboard/', include('admin_dashboard.urls')),
     path('api/music/', include('music.urls')),
+    path('api/chat/', include('chat.urls')),
 ]

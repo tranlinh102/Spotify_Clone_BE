@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'manager.apps.ManagerConfig',
     'admin_dashboard.apps.AdminDashboardConfig',
     'music.apps.MusicConfig',
+    'channels',
     'chat.apps.ChatConfig',
 ]
 

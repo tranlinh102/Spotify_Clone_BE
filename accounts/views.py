@@ -31,7 +31,7 @@ def set_jwt_cookies(response: Response, access_token: str, refresh_token: str = 
         secure=True,
         samesite='None',
         path='/',
-        max_age=60 * 30 # 30 phút
+        max_age=60 * 120 # 30 phút
     )
 
     # REFRESH TOKEN – dùng riêng, nếu có truyền vào
