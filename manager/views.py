@@ -249,6 +249,7 @@ class PlaylistViewSet(viewsets.ModelViewSet):
 class ArtistViewSet(viewsets.ModelViewSet):
     queryset = Artist.objects.all()
     serializer_class = ArtistSerializer
+    pagination_class = CustomPagination
     permission_classes = [AllowAny]
 
     def get_s3_client(self):
@@ -370,7 +371,15 @@ class ArtistViewSet(viewsets.ModelViewSet):
             if not name_query:
                 return Response({"error": "Query parameter 'name' is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-            artists = Artist.objects.filter(name__icontains=name_query)
+            artists = Artist.objects.filter(name__icontains=name_query).order_by('artist_id')
+
+            # Phân trang kết quả tìm kiếm
+            page = self.paginate_queryset(artists)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+
+            # Nếu không phân trang được (hiếm khi xảy ra)
             serializer = self.get_serializer(artists, many=True)
             return Response({
                 "message": "Search results",
@@ -384,6 +393,7 @@ class ArtistViewSet(viewsets.ModelViewSet):
 class AlbumViewSet(viewsets.ModelViewSet):
     queryset = Album.objects.all()
     serializer_class = AlbumSerializer
+    pagination_class = CustomPagination
     permission_classes  = [AllowAny]
 
     def get_s3_client(self):
@@ -479,15 +489,22 @@ class AlbumViewSet(viewsets.ModelViewSet):
     def search_album(self, request):
         try:
             title_query = request.query_params.get('title', '').strip()
-            if not title_query:
-                return Response({"error": "Query parameter 'title' is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-            albums = Album.objects.filter(title__icontains=title_query)
-            serializer = self.get_serializer(albums, many=True)
-            return Response({
-                "message": "Search results",
-                "results": serializer.data
-            }, status=status.HTTP_200_OK)
+            # Tìm album theo tiêu đề
+            queryset = Album.objects.filter(title__icontains=title_query).order_by('album_id')
+
+            # Áp dụng phân trang
+            paginator = self.pagination_class()
+            page = paginator.paginate_queryset(queryset, request)
+
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return paginator.get_paginated_response(serializer.data)
+
+            # Nếu không có trang nào (dữ liệu rỗng)
+            serializer = self.get_serializer(queryset, many=True)
+            return Response({"results": serializer.data, "count": len(serializer.data)}, status=status.HTTP_200_OK)
+
         except Exception as e:
             return Response({
                 "error": f"Failed to search albums: {str(e)}"
