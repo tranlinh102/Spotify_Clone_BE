@@ -19,30 +19,76 @@ from botocore.exceptions import PartialCredentialsError
 from rest_framework.permissions import AllowAny
 from django.db.models import Count
 from django.contrib.auth.models import User
+from django.db.models import Q
 
+from rest_framework.pagination import PageNumberPagination
+
+class CustomPagination(PageNumberPagination):
+    page_size = 6  # mặc định mỗi trang 10 item
+    page_size_query_param = 'page_size'
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    pagination_class = CustomPagination
     permission_classes = [AllowAny]
+
+    @action(detail=False, methods=['get'], url_path='search')
+    def search_user(self, request):
+        keyword = request.query_params.get('q', '').strip()
+        if not keyword:
+            return Response({'error': 'Thiếu tham số tìm kiếm "q"'}, status=status.HTTP_400_BAD_REQUEST)
+
+        users = User.objects.filter(
+            Q(username__icontains=keyword) | Q(email__icontains=keyword)
+        )
+
+        # Áp dụng phân trang
+        page = self.paginate_queryset(users)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # Nếu không có phân trang thì trả thẳng
+        serializer = self.get_serializer(users, many=True)
+        return Response({'results': serializer.data}, status=status.HTTP_200_OK)
+
 
     @action(detail=False, methods=['post'], url_path='add')
     def create_user(self, request):
         try:
             username = request.data.get('username')
             email = request.data.get('email')
+            password = request.data.get('password')
+            first_name = request.data.get('first_name', '')
+            last_name = request.data.get('last_name', '')
+            is_active = request.data.get('is_active', True)
+            is_staff = request.data.get('is_staff', False)
+            is_superuser = request.data.get('is_superuser', False)
 
-            if not username or not email:
-                return Response({'error': 'Username và Email là bắt buộc'}, status=status.HTTP_400_BAD_REQUEST)
+            # Kiểm tra bắt buộc
+            if not username or not email or not password:
+                return Response({'error': 'Username, Email và Mật khẩu là bắt buộc'}, status=status.HTTP_400_BAD_REQUEST)
 
             if User.objects.filter(username=username).exists():
                 return Response({'error': 'Username đã tồn tại'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Tạo user với mật khẩu mặc định là "123"
-            user = User.objects.create_user(username=username, email=email, password='123')
-            serializer = self.get_serializer(user)
+            # Tạo user
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name
+            )
+            user.is_active = bool(int(is_active))
+            user.is_staff = bool(int(is_staff))
+            user.is_superuser = bool(int(is_superuser))
+            user.save()
 
+            serializer = self.get_serializer(user)
             return Response({'message': 'Tạo user thành công', 'user': serializer.data}, status=status.HTTP_201_CREATED)
+
         except Exception as e:
             return Response({'error': f'Lỗi tạo user: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -52,8 +98,15 @@ class UserViewSet(viewsets.ModelViewSet):
             user = self.get_object()
             serializer = self.get_serializer(user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response({'message': 'Cập nhật user thành công', 'user': serializer.data}, status=status.HTTP_200_OK)
+
+            # Nếu có mật khẩu thì xử lý riêng để mã hóa
+            password = serializer.validated_data.pop('password', None)
+            user = serializer.save()
+            if password:
+                user.set_password(password)
+                user.save()
+
+            return Response({'message': 'Cập nhật user thành công', 'user': self.get_serializer(user).data}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': f'Lỗi cập nhật user: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -61,10 +114,11 @@ class UserViewSet(viewsets.ModelViewSet):
     def delete_user(self, request, pk=None):
         try:
             user = self.get_object()
-            user.delete()
-            return Response({'message': 'Xóa user thành công'}, status=status.HTTP_204_NO_CONTENT)
+            user.is_active = False
+            user.save()
+            return Response({'message': 'Đã vô hiệu hóa user'}, status=status.HTTP_200_OK)
         except Exception as e:
-            return Response({'error': f'Lỗi xóa user: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': f'Lỗi vô hiệu hóa user: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['get'], url_path='count')
     def count_users(self, request):
@@ -73,6 +127,17 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({'total_users': total}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['put'], url_path='reset-password')
+    def reset_password(self, request, pk=None):
+        try:
+            user = self.get_object()
+            new_password = request.data.get('password', '123456')
+            user.set_password(new_password)
+            user.save()
+            return Response({'message': 'Đặt lại mật khẩu thành công'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': f'Lỗi đặt lại mật khẩu: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class PlaylistViewSet(viewsets.ModelViewSet):
     queryset = Playlist.objects.all()
