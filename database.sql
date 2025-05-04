@@ -296,7 +296,6 @@ CREATE TABLE `auth_user` (
 --
 -- Đang đổ dữ liệu cho bảng `auth_user`
 --
-
 INSERT INTO `auth_user` (`id`, `password`, `last_login`, `is_superuser`, `username`, `first_name`, `last_name`, `email`, `is_staff`, `is_active`, `date_joined`) VALUES
 (1, 'pbkdf2_sha256$1000000$MfCZiazVVskGo083Oq7luL$xTU+FSVWrnPv1pMppwE4m34gAO59Tx/RxLKtIY7dD7o=', NULL, 1, 'admin', '', '', 'admin@gmail.com', 1, 1, '2025-04-21 15:34:16.582349'),
 (2, 'pbkdf2_sha256$1000000$dzM2GoStTqrXRiBozaf6f2$TCaqmHBUcmnEytjKTUYP0W3SLr5LpvAALFvxenxDzaI=', NULL, 0, 'linh', '', '', 'linhtranvo2003@gmail.com', 0, 1, '2025-04-24 14:04:16.657189'),
@@ -671,8 +670,8 @@ CREATE TABLE `songs` (
   `video_url` varchar(255) DEFAULT NULL,
   `content_type` varchar(50) DEFAULT NULL,
   `created_at` datetime(6) NOT NULL,
-  `duration` varchar(5) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 --
 -- Đang đổ dữ liệu cho bảng `songs`
@@ -690,6 +689,7 @@ INSERT INTO `songs` (`song_id`, `title`, `image`, `file_path`, `video_url`, `con
 (9, 'Kén cá chọn canh', 'image/Kén_cá_chọn_canh.jpg', 'songs/Kén_Cá_Chọn_Canh_-_Hòa_Minzy_x_Tuấn_Cry_x_Masew_-_Official_Music_Video_Genshin_Impact.mp3', 'video/Kén_Cá_Chọn_Canh_-_Hòa_Minzy_x_Tuấn_Cry_x_Masew_-_Official_Music_Video_Genshin_Impact.mp4', 'Music', '2025-05-03 08:05:39.797233', NULL),
 (10, 'Thị Mầu', 'image/Thị_Mầu.jpg', 'songs/Thị_Mầu_-_Hòa_Minzy_x_Masew_-_Official_Music_Video.mp3', 'video/Thị_Mầu_-_Hòa_Minzy_x_Masew_-_Official_Music_Video.mp4', 'Music', '2025-05-03 08:06:31.317178', NULL),
 (11, 'Giá như', 'image/Giá_như_XkzyPdC.jpg', 'songs/SOOBIN_-_giá_như_-_Karaoke.mp3', 'video/SOOBIN_-_giá_như_-_Karaoke.mp4', 'Music', '2025-05-03 08:36:47.915094', NULL);
+
 
 --
 -- Chỉ mục cho các bảng đã đổ
@@ -1153,6 +1153,10 @@ ALTER TABLE `playlist_songs`
   ADD CONSTRAINT `playlist_songs_song_id_1f2a4faa_fk_songs_song_id` FOREIGN KEY (`song_id`) REFERENCES `songs` (`song_id`);
 COMMIT;
 
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2025-05-02 20:22:50
