@@ -20,4 +20,6 @@ urlpatterns = [
     path('artists/followed/', UserFollowedArtistsView.as_view(), name='user-followed-artists'),
     path('artists/follow/', FollowArtistView.as_view(), name='follow-artist'),
     path('artists/unfollow/', UnfollowArtistView.as_view(), name='unfollow-artist'),
+    path('artists/<int:artist_id>/songs/', ArtistSongsView.as_view(), name='artist-songs'),
+    path('artists/<int:artist_id>/', ArtistDetailView.as_view(), name='artist-detail'),
 ]

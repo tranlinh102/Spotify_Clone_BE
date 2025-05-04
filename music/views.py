@@ -204,3 +204,28 @@ class PlaylistDetailView(APIView):
             "playlist": playlist_serializer.data,
             "songs": songs_serializer.data
         }, status=status.HTTP_200_OK)
+    
+class ArtistSongsView(ListAPIView):
+    serializer_class = SongSerializer
+
+    def get_queryset(self):
+        artist_id = self.kwargs.get('artist_id')  # Lấy artist_id từ URL
+        return Song.objects.filter(artistsong__artist_id=artist_id).prefetch_related('artistsong_set__artist')
+
+class ArtistDetailView(APIView):
+    def get(self, request, artist_id):
+        # Lấy thông tin nghệ sĩ
+        artist = get_object_or_404(Artist, artist_id=artist_id)
+        artist_serializer = ArtistSerializer(artist)
+
+        # Kiểm tra xem người dùng có theo dõi nghệ sĩ này không
+        is_following = Follower.objects.filter(user=request.user, artist=artist).exists()
+
+        songs = Song.objects.filter(artistsong__artist_id=artist_id).prefetch_related('artistsong_set__artist')
+        songs_serializer = SongSerializer(songs, many=True)
+
+        return Response({
+            "artist": artist_serializer.data,
+            "is_following": is_following,
+            "songs": songs_serializer.data
+        }, status=status.HTTP_200_OK)
