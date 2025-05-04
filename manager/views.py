@@ -24,14 +24,38 @@ from django.db.models import Q
 from rest_framework.pagination import PageNumberPagination
 
 class CustomPagination(PageNumberPagination):
-    page_size = 6  # mặc định mỗi trang 10 item
+    page_size = 6
     page_size_query_param = 'page_size'
+    max_page_size = 100
+
+    def get_paginated_response(self, data):
+        return Response({
+            'count': self.page.paginator.count,
+            'next': self.get_next_link(),
+            'previous': self.get_previous_link(),
+            'results': data
+        })
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    pagination_class = CustomPagination
     permission_classes = [AllowAny]
+
+    # Action phân trang để lấy tất cả users
+    @action(detail=False, methods=['get'], url_path='all-users')
+    def get_all_users(self, request):
+        # Lấy tất cả user và áp dụng phân trang
+        users = User.objects.all()
+
+        # Áp dụng phân trang
+        page = self.paginate_queryset(users)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # Nếu không có phân trang thì trả thẳng
+        serializer = self.get_serializer(users, many=True)
+        return Response({'results': serializer.data}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='search')
     def search_user(self, request):
@@ -249,7 +273,6 @@ class PlaylistViewSet(viewsets.ModelViewSet):
 class ArtistViewSet(viewsets.ModelViewSet):
     queryset = Artist.objects.all()
     serializer_class = ArtistSerializer
-    pagination_class = CustomPagination
     permission_classes = [AllowAny]
 
     def get_s3_client(self):
@@ -259,6 +282,21 @@ class ArtistViewSet(viewsets.ModelViewSet):
             aws_secret_access_key=config('AWS_SECRET_ACCESS_KEY'),
             region_name=config('AWS_S3_REGION_NAME', default='ap-southeast-1')
         )
+
+    # Action phân trang để lấy tất cả artist
+    @action(detail=False, methods=['get'], url_path='all-artists')
+    def get_all_artists(self, request):
+        artists = Artist.objects.all()
+
+        # Áp dụng phân trang
+        page = self.paginate_queryset(artists)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # Nếu không có phân trang thì trả thẳng
+        serializer = self.get_serializer(artists, many=True)
+        return Response({'results': serializer.data}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='top-followed')
     def top_followed_artists(self, request):
@@ -393,7 +431,6 @@ class ArtistViewSet(viewsets.ModelViewSet):
 class AlbumViewSet(viewsets.ModelViewSet):
     queryset = Album.objects.all()
     serializer_class = AlbumSerializer
-    pagination_class = CustomPagination
     permission_classes  = [AllowAny]
 
     def get_s3_client(self):
@@ -403,6 +440,21 @@ class AlbumViewSet(viewsets.ModelViewSet):
             aws_secret_access_key=config('AWS_SECRET_ACCESS_KEY'),
             region_name=config('AWS_S3_REGION_NAME', default='ap-southeast-1')
         )
+
+    # Action phân trang để lấy tất cả album
+    @action(detail=False, methods=['get'], url_path='all-albums')
+    def get_all_albums(self, request):
+        albums = Album.objects.all()
+
+        # Áp dụng phân trang
+        page = self.paginate_queryset(albums)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # Nếu không có phân trang thì trả thẳng
+        serializer = self.get_serializer(albums, many=True)
+        return Response({'results': serializer.data}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='count')
     def count_album(self, request):
