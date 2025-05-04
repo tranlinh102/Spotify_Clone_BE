@@ -1,8 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 import boto3
-from django.conf import settings
 from decouple import config
-from django.db.models import F
+from django.db.models import Q
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -236,5 +235,44 @@ class ArtistDetailView(APIView):
             "artist": artist_serializer.data,
             "is_following": is_following,
             "songs": songs_serializer.data,
+            "albums": albums_serializer.data
+        }, status=status.HTTP_200_OK)
+    
+class CheckSongFavoriteView(APIView):
+    def get(self, request, song_id):
+        # Kiểm tra bài hát có tồn tại không
+        song = get_object_or_404(Song, song_id=song_id)
+
+        # Kiểm tra xem người dùng hiện tại có yêu thích bài hát này không
+        is_favorite = Favorite.objects.filter(user=request.user, song=song).exists()
+
+        return Response({
+            "song_id": song_id,
+            "is_favorite": is_favorite
+        }, status=status.HTTP_200_OK)
+    
+class SearchView(APIView):
+    def get(self, request):
+        query = request.query_params.get('q', '')  # Lấy chuỗi tìm kiếm từ query parameter
+
+        if not query:
+            return Response({"error": "Query parameter 'q' is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Tìm kiếm gần giống trong Song, Playlist, Artist, và Album
+        songs = Song.objects.filter(Q(title__icontains=query))
+        playlists = Playlist.objects.filter(Q(title__icontains=query))
+        artists = Artist.objects.filter(Q(name__icontains=query))
+        albums = Album.objects.filter(Q(title__icontains=query))
+
+        # Serialize dữ liệu
+        songs_serializer = SongSerializer(songs, many=True)
+        playlists_serializer = PlaylistSerializer(playlists, many=True)
+        artists_serializer = ArtistSerializer(artists, many=True)
+        albums_serializer = AlbumSerializer(albums, many=True)
+
+        return Response({
+            "songs": songs_serializer.data,
+            "playlists": playlists_serializer.data,
+            "artists": artists_serializer.data,
             "albums": albums_serializer.data
         }, status=status.HTTP_200_OK)

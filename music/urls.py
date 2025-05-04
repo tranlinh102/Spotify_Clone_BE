@@ -10,6 +10,7 @@ urlpatterns = [
     path('songs/favorites/', UserFavoriteSongsView.as_view(), name='user-favorite-songs'),
     path('songs/favorites/add/', AddSongToFavoritesView.as_view(), name='add-song-to-favorites'),
     path('songs/favorites/remove/', RemoveSongFromFavoritesView.as_view(), name='remove-song-from-favorites'),
+    path('songs/<int:song_id>/is-favorite/', CheckSongFavoriteView.as_view(), name='check-song-favorite'),
     path('playlistsSuggested/', LatestPlaylistsView.as_view(), name='latest-playlists'),
     path('playlists/<int:playlist_id>/songs/', PlaylistSongsView.as_view(), name='playlist-songs'),
     path('playlists/create/', CreatePlaylistView.as_view(), name='create-playlist'),
@@ -22,4 +23,5 @@ urlpatterns = [
     path('artists/unfollow/', UnfollowArtistView.as_view(), name='unfollow-artist'),
     path('artists/<int:artist_id>/songs/', ArtistSongsView.as_view(), name='artist-songs'),
     path('artists/<int:artist_id>/', ArtistDetailView.as_view(), name='artist-detail'),
+    path('search/', SearchView.as_view(), name='search'),
 ]
