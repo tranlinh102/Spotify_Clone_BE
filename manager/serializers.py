@@ -15,13 +15,13 @@ class UserSerializer(serializers.ModelSerializer):
 
 class PlaylistSerializer(serializers.ModelSerializer):
     created_by_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
+        read_only=True,
         source='created_by'  # Ánh xạ với trường 'create_by' trong model playlist
     )
     class Meta:
         model = Playlist
-        fields = ['playlist_id', 'title', 'image', 'created_at']
-        read_only_fields = ['playlist_id', 'created_at']
+        fields = ['playlist_id', 'title', 'image', 'created_at', 'created_by_id']
+        read_only_fields = ['playlist_id', 'created_at', 'created_by_id']
 
 class ArtistSerializer(serializers.ModelSerializer):
     follower_count = serializers.IntegerField(read_only=True)

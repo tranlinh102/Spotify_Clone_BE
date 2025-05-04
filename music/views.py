@@ -4,7 +4,6 @@ from django.conf import settings
 from decouple import config
 from django.db.models import F
 
-# Create your views here.
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
