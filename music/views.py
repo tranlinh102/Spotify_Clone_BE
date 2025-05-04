@@ -276,3 +276,10 @@ class SearchView(APIView):
             "artists": artists_serializer.data,
             "albums": albums_serializer.data
         }, status=status.HTTP_200_OK)
+    
+class OldestArtistsView(ListAPIView):
+    serializer_class = ArtistSerializer
+
+    def get_queryset(self):
+        # Lấy 8 nghệ sĩ cũ nhất dựa trên thời gian tạo (created_at)
+        return Artist.objects.all()[:4]

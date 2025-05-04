@@ -23,5 +23,6 @@ urlpatterns = [
     path('artists/unfollow/', UnfollowArtistView.as_view(), name='unfollow-artist'),
     path('artists/<int:artist_id>/songs/', ArtistSongsView.as_view(), name='artist-songs'),
     path('artists/<int:artist_id>/', ArtistDetailView.as_view(), name='artist-detail'),
+    path('artists/suggested/', OldestArtistsView.as_view(), name='oldest-artists'),
     path('search/', SearchView.as_view(), name='search'),
 ]
