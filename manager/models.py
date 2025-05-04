@@ -49,6 +49,7 @@ class Song(models.Model):
     video_url = models.FileField(upload_to='video/', max_length=255, blank=True, null=True)
     content_type = models.CharField(max_length=50, blank=True, null=True)  # e.g., 'audio/mpeg', 'video/mp4'
     created_at = models.DateTimeField(auto_now_add=True)
+    duration = models.CharField(max_length=5, blank=True, null=True)  # Ví dụ: '03:45'
 
     def __str__(self):
         return self.title
@@ -139,4 +140,47 @@ class Message(models.Model):
         return f"Message from {self.sender} to {self.receiver}"
     class Meta:
         db_table = 'messages'
+
+class ChatRoom(models.Model):
+    id = models.AutoField(primary_key=True)
+    user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chatrooms_user1')
+    user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chatrooms_user2')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'chatrooms'
+
+
+class ChatMessage(models.Model):
+    id = models.AutoField(primary_key=True)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    chatroom = models.ForeignKey(ChatRoom, on_delete=models.CASCADE)
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+    song = models.ForeignKey(Song, on_delete=models.SET_NULL, null=True, blank=True)
+    srcfile = models.FileField(upload_to='chatfiles/', max_length=255, blank=True, null=True)
+
+    class Meta:
+        db_table = 'chatmessages'
+
+
+class PlaylistFavorite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'playlist')
+        db_table = 'playlist_favorites'
+
+
+class AlbumFavorite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    album = models.ForeignKey(Album, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'album')
+        db_table = 'album_favorites'
 # Create your models here.

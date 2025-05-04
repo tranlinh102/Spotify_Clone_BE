@@ -5,15 +5,26 @@ from manager.models import *
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email']
+        fields = [
+            'id', 'username', 'password', 'first_name', 'last_name', 'email',
+            'is_active', 'is_staff', 'is_superuser', 'last_login', 'date_joined'
+        ]
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
 
 class PlaylistSerializer(serializers.ModelSerializer):
+    created_by_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        source='created_by'  # Ánh xạ với trường 'create_by' trong model playlist
+    )
     class Meta:
         model = Playlist
         fields = ['playlist_id', 'title', 'image', 'created_at']
         read_only_fields = ['playlist_id', 'created_at']
 
 class ArtistSerializer(serializers.ModelSerializer):
+    follower_count = serializers.IntegerField(read_only=True)
     class Meta:
         model = Artist
         fields = '__all__'
