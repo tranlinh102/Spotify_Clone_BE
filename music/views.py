@@ -196,12 +196,16 @@ class PlaylistDetailView(APIView):
         playlist = get_object_or_404(Playlist, playlist_id=playlist_id)
         playlist_serializer = PlaylistSerializer(playlist)
 
+        # Kiểm tra xem người dùng hiện tại có phải là người tạo playlist không
+        is_owner = playlist.created_by == request.user
+
         # Lấy danh sách bài hát trong playlist (tận dụng PlaylistSongsView)
         songs = Song.objects.filter(playlistsong__playlist_id=playlist_id).prefetch_related('artistsong_set__artist')
         songs_serializer = SongSerializer(songs, many=True)
 
         return Response({
             "playlist": playlist_serializer.data,
+            "is_owner": is_owner,
             "songs": songs_serializer.data
         }, status=status.HTTP_200_OK)
     
