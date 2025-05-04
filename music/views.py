@@ -8,8 +8,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import ListAPIView
-from manager.models import Artist, Favorite, Follower, Song, Playlist, PlaylistSong
-from manager.serializers import SongSerializer, PlaylistSerializer, ArtistSerializer
+from manager.models import Album, Artist, Favorite, Follower, Song, Playlist, PlaylistSong
+from manager.serializers import AlbumSerializer, SongSerializer, PlaylistSerializer, ArtistSerializer
 
 class SongUploadView(APIView):
     def post(self, request):
@@ -155,9 +155,9 @@ class UserFavoriteSongsView(ListAPIView):
     serializer_class = SongSerializer
 
     def get_queryset(self):
-        # Lấy danh sách bài hát yêu thích của người dùng hiện tại
-        return Song.objects.filter(favorite__user=self.request.user).distinct()
-
+        # Lấy danh sách bài hát yêu thích của người dùng hiện tại, sắp xếp theo thứ tự thêm vào (cũ nhất trước)
+        return Song.objects.filter(favorite__user=self.request.user).order_by('favorite__added_at').distinct()
+    
 class AddSongToFavoritesView(APIView):
     def post(self, request):
         song_id = request.data.get('song_id')
@@ -224,11 +224,17 @@ class ArtistDetailView(APIView):
         # Kiểm tra xem người dùng có theo dõi nghệ sĩ này không
         is_following = Follower.objects.filter(user=request.user, artist=artist).exists()
 
+        # Lấy danh sách bài hát của nghệ sĩ
         songs = Song.objects.filter(artistsong__artist_id=artist_id).prefetch_related('artistsong_set__artist')
         songs_serializer = SongSerializer(songs, many=True)
+
+        # Lấy danh sách album của nghệ sĩ
+        albums = Album.objects.filter(artist=artist)
+        albums_serializer = AlbumSerializer(albums, many=True)
 
         return Response({
             "artist": artist_serializer.data,
             "is_following": is_following,
-            "songs": songs_serializer.data
+            "songs": songs_serializer.data,
+            "albums": albums_serializer.data
         }, status=status.HTTP_200_OK)
