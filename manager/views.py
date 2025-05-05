@@ -23,59 +23,48 @@ from django.db.models import Q
 
 from rest_framework.pagination import PageNumberPagination
 
-class CustomPagination(PageNumberPagination):
+class PagePagination(PageNumberPagination):
     page_size = 6
-    page_size_query_param = 'page_size'
-    max_page_size = 100
-
-    def get_paginated_response(self, data):
-        return Response({
-            'count': self.page.paginator.count,
-            'next': self.get_next_link(),
-            'previous': self.get_previous_link(),
-            'results': data
-        })
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
-    # Action phân trang để lấy tất cả users
-    @action(detail=False, methods=['get'], url_path='all-users')
-    def get_all_users(self, request):
-        # Lấy tất cả user và áp dụng phân trang
-        users = User.objects.all()
-
-        # Áp dụng phân trang
-        page = self.paginate_queryset(users)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        # Nếu không có phân trang thì trả thẳng
-        serializer = self.get_serializer(users, many=True)
-        return Response({'results': serializer.data}, status=status.HTTP_200_OK)
-
     @action(detail=False, methods=['get'], url_path='search')
     def search_user(self, request):
-        keyword = request.query_params.get('q', '').strip()
-        if not keyword:
-            return Response({'error': 'Thiếu tham số tìm kiếm "q"'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            keyword = request.query_params.get('q', '').strip()
 
-        users = User.objects.filter(
-            Q(username__icontains=keyword) | Q(email__icontains=keyword)
-        )
+            # Nếu không có keyword thì trả toàn bộ danh sách (hoặc bạn có thể giữ nguyên lỗi nếu muốn bắt buộc truyền q)
+            if keyword:
+                users = User.objects.filter(
+                    Q(username__icontains=keyword) |
+                    Q(email__icontains=keyword)
+                )
+            else:
+                users = User.objects.all()
 
-        # Áp dụng phân trang
-        page = self.paginate_queryset(users)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+            users = users.order_by('id')  # hoặc 'user_id' nếu bạn dùng tên khác
 
-        # Nếu không có phân trang thì trả thẳng
-        serializer = self.get_serializer(users, many=True)
-        return Response({'results': serializer.data}, status=status.HTTP_200_OK)
+            # Phân trang
+            paginator = PagePagination()
+            page = paginator.paginate_queryset(users, request)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return paginator.get_paginated_response(serializer.data)
+
+            # Không phân trang thì trả toàn bộ
+            serializer = self.get_serializer(users, many=True)
+            return Response({
+                "message": "Search results",
+                "results": serializer.data
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({
+                "error": f"Failed to search users: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
     @action(detail=False, methods=['post'], url_path='add')
@@ -283,21 +272,6 @@ class ArtistViewSet(viewsets.ModelViewSet):
             region_name=config('AWS_S3_REGION_NAME', default='ap-southeast-1')
         )
 
-    # Action phân trang để lấy tất cả artist
-    @action(detail=False, methods=['get'], url_path='all-artists')
-    def get_all_artists(self, request):
-        artists = Artist.objects.all()
-
-        # Áp dụng phân trang
-        page = self.paginate_queryset(artists)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        # Nếu không có phân trang thì trả thẳng
-        serializer = self.get_serializer(artists, many=True)
-        return Response({'results': serializer.data}, status=status.HTTP_200_OK)
-
     @action(detail=False, methods=['get'], url_path='top-followed')
     def top_followed_artists(self, request):
         try:
@@ -406,23 +380,29 @@ class ArtistViewSet(viewsets.ModelViewSet):
     def search_artist(self, request):
         try:
             name_query = request.query_params.get('name', '').strip()
-            if not name_query:
-                return Response({"error": "Query parameter 'name' is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-            artists = Artist.objects.filter(name__icontains=name_query).order_by('artist_id')
+            # Tìm theo tên nếu có query, không bắt buộc phải truyền
+            if name_query:
+                artists = Artist.objects.filter(name__icontains=name_query)
+            else:
+                artists = Artist.objects.all()
 
-            # Phân trang kết quả tìm kiếm
-            page = self.paginate_queryset(artists)
+            artists = artists.order_by('artist_id')
+
+            # Áp dụng phân trang tuỳ chỉnh
+            paginator = PagePagination()
+            page = paginator.paginate_queryset(artists, request)
             if page is not None:
                 serializer = self.get_serializer(page, many=True)
-                return self.get_paginated_response(serializer.data)
+                return paginator.get_paginated_response(serializer.data)
 
-            # Nếu không phân trang được (hiếm khi xảy ra)
+            # Nếu không cần phân trang
             serializer = self.get_serializer(artists, many=True)
             return Response({
                 "message": "Search results",
                 "results": serializer.data
             }, status=status.HTTP_200_OK)
+
         except Exception as e:
             return Response({
                 "error": f"Failed to search artists: {str(e)}"
@@ -440,21 +420,6 @@ class AlbumViewSet(viewsets.ModelViewSet):
             aws_secret_access_key=config('AWS_SECRET_ACCESS_KEY'),
             region_name=config('AWS_S3_REGION_NAME', default='ap-southeast-1')
         )
-
-    # Action phân trang để lấy tất cả album
-    @action(detail=False, methods=['get'], url_path='all-albums')
-    def get_all_albums(self, request):
-        albums = Album.objects.all()
-
-        # Áp dụng phân trang
-        page = self.paginate_queryset(albums)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        # Nếu không có phân trang thì trả thẳng
-        serializer = self.get_serializer(albums, many=True)
-        return Response({'results': serializer.data}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='count')
     def count_album(self, request):
@@ -542,20 +507,23 @@ class AlbumViewSet(viewsets.ModelViewSet):
         try:
             title_query = request.query_params.get('title', '').strip()
 
-            # Tìm album theo tiêu đề
-            queryset = Album.objects.filter(title__icontains=title_query).order_by('album_id')
+            # Lọc album theo tiêu đề nếu có
+            queryset = Album.objects.filter(title__icontains=title_query) if title_query else Album.objects.all()
+            queryset = queryset.order_by('album_id')
 
-            # Áp dụng phân trang
-            paginator = self.pagination_class()
+            # Áp dụng phân trang tùy chỉnh
+            paginator = PagePagination()
             page = paginator.paginate_queryset(queryset, request)
-
             if page is not None:
                 serializer = self.get_serializer(page, many=True)
                 return paginator.get_paginated_response(serializer.data)
 
-            # Nếu không có trang nào (dữ liệu rỗng)
+            # Nếu không cần phân trang
             serializer = self.get_serializer(queryset, many=True)
-            return Response({"results": serializer.data, "count": len(serializer.data)}, status=status.HTTP_200_OK)
+            return Response({
+                "message": "Search results",
+                "results": serializer.data
+            }, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({
