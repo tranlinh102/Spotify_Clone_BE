@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import UserViewSet, PlaylistViewSet, PlaylistSongViewSet, ArtistSongViewSet, ArtistViewSet, AlbumViewSet, SongViewSet, FavoriteViewSet, DownloadViewSet, AlbumSongViewSet, FollowerViewSet, MessageViewSet
+from .views import ContentTypeStatsView, UserViewSet, PlaylistViewSet, PlaylistSongViewSet, ArtistSongViewSet, ArtistViewSet, AlbumViewSet, SongViewSet, FavoriteViewSet, DownloadViewSet, AlbumSongViewSet, FollowerViewSet, MessageViewSet
 
 router = DefaultRouter()
 router.register(r'artists', ArtistViewSet)
@@ -18,4 +18,5 @@ router.register(r'users', UserViewSet, basename='user')
 
 urlpatterns = [
     path('', include(router.urls)),
+     path('stats/content-type/', ContentTypeStatsView.as_view(), name='content_type_stats'),
 ]

@@ -21,6 +21,17 @@ from rest_framework.permissions import AllowAny
 from django.db.models import Count
 from django.contrib.auth.models import User
 
+class ContentTypeStatsView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        music_count = Song.objects.filter(content_type='music').count()
+        podcast_count = Song.objects.filter(content_type='podcast').count()
+
+        return Response({
+            "music": music_count,
+            "podcast": podcast_count
+        })
+
 class PagePagination(PageNumberPagination):
     page_size = 6
 
