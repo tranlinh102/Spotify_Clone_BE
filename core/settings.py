@@ -170,7 +170,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),  # thời gian sống của access token
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),  # thời gian sống của access token
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
@@ -190,7 +190,7 @@ STORAGES = {
             "region_name": config('AWS_S3_REGION_NAME', default='ap-southeast-2'),
             "signature_version": "s3v4",
             "file_overwrite": False,            
-            #"custom_domain": f'{config("AWS_STORAGE_BUCKET_NAME")}.s3.{config("AWS_S3_REGION_NAME", default="ap-southeast-2")}.amazonaws.com',
+            "custom_domain": f'{config("AWS_STORAGE_BUCKET_NAME")}.s3.{config("AWS_S3_REGION_NAME", default="ap-southeast-2")}.amazonaws.com',
             "default_acl": None,
         },
     },

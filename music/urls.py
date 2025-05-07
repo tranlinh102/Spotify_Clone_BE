@@ -18,6 +18,7 @@ urlpatterns = [
     path('playlists/add-song/', AddSongToPlaylistView.as_view(), name='add-song-to-playlist'),
     path('playlists/<int:playlist_id>/', PlaylistDetailView.as_view(), name='playlist-detail'),
     path('playlists/remove-song/', RemoveSongFromPlaylistView.as_view(), name='remove-song-from-playlist'),
+    path('playlists/<int:playlist_id>/delete/', DeletePlaylistView.as_view(), name='delete-playlist'),
     path('artists/followed/', UserFollowedArtistsView.as_view(), name='user-followed-artists'),
     path('artists/follow/', FollowArtistView.as_view(), name='follow-artist'),
     path('artists/unfollow/', UnfollowArtistView.as_view(), name='unfollow-artist'),

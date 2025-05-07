@@ -283,3 +283,16 @@ class OldestArtistsView(ListAPIView):
     def get_queryset(self):
         # Lấy 8 nghệ sĩ cũ nhất dựa trên thời gian tạo (created_at)
         return Artist.objects.all()[:4]
+    
+class DeletePlaylistView(APIView):
+    def delete(self, request, playlist_id):
+        # Lấy playlist từ cơ sở dữ liệu
+        playlist = get_object_or_404(Playlist, playlist_id=playlist_id)
+
+        # Kiểm tra xem người dùng hiện tại có phải là người tạo playlist không
+        if playlist.created_by != request.user:
+            return Response({"error": "You do not have permission to delete this playlist."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Xóa playlist
+        playlist.delete()
+        return Response({"message": "Playlist deleted successfully."}, status=status.HTTP_200_OK)
