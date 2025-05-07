@@ -2,13 +2,13 @@ from django.shortcuts import render, get_object_or_404
 import boto3
 from decouple import config
 from django.db.models import Q
-
+from django.contrib.auth.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import ListAPIView
 from manager.models import Album, Artist, Favorite, Follower, Song, Playlist, PlaylistSong
-from manager.serializers import AlbumSerializer, SongSerializer, PlaylistSerializer, ArtistSerializer
+from manager.serializers import *
 
 class SongUploadView(APIView):
     def post(self, request):
@@ -263,18 +263,21 @@ class SearchView(APIView):
         playlists = Playlist.objects.filter(Q(title__icontains=query))
         artists = Artist.objects.filter(Q(name__icontains=query))
         albums = Album.objects.filter(Q(title__icontains=query))
+        users = User.objects.filter(Q(username__icontains=query), is_staff = False, is_active=True, is_superuser=False).distinct()
 
         # Serialize dữ liệu
         songs_serializer = SongSerializer(songs, many=True)
         playlists_serializer = PlaylistSerializer(playlists, many=True)
         artists_serializer = ArtistSerializer(artists, many=True)
         albums_serializer = AlbumSerializer(albums, many=True)
+        users_serializer = UserSerializer(users, many=True)
 
         return Response({
             "songs": songs_serializer.data,
             "playlists": playlists_serializer.data,
             "artists": artists_serializer.data,
-            "albums": albums_serializer.data
+            "albums": albums_serializer.data,
+            "users": users_serializer.data
         }, status=status.HTTP_200_OK)
     
 class OldestArtistsView(ListAPIView):
@@ -296,3 +299,53 @@ class DeletePlaylistView(APIView):
         # Xóa playlist
         playlist.delete()
         return Response({"message": "Playlist deleted successfully."}, status=status.HTTP_200_OK)
+
+class UserDetailView(APIView):
+    def get(self, request, user_id):
+        # Lấy thông tin người dùng từ cơ sở dữ liệu
+        user = get_object_or_404(User, id=user_id)
+
+        # Serialize dữ liệu người dùng
+        user_serializer = UserSerializer(user)
+
+        # Lấy danh sách playlist mà người dùng đã tạo
+        playlists = Playlist.objects.filter(created_by=user)
+        playlist_serializer = PlaylistSerializer(playlists, many=True)
+
+        return Response({
+            "user": user_serializer.data,
+            "playlists": playlist_serializer.data
+        }, status=status.HTTP_200_OK)
+
+class AlbumDetailView(APIView):
+    def get(self, request, album_id):
+        # Lấy thông tin album từ cơ sở dữ liệu
+        album = get_object_or_404(Album, album_id=album_id)
+        album_serializer = AlbumSerializer(album)
+
+        # Lấy danh sách bài hát trong album
+        songs = getAlbumSongs(album_id)
+        songs_serializer = SongSerializer(songs, many=True)
+
+        return Response({
+            "album": album_serializer.data,
+            "songs": songs_serializer.data
+        }, status=status.HTTP_200_OK)
+    
+class AlbumSongsView(APIView):
+    def get(self, request, album_id):
+
+        # Lấy danh sách bài hát
+        songs = getAlbumSongs(album_id)
+
+        # Serialize danh sách bài hát
+        songs_serializer = SongSerializer(songs, many=True)
+
+        # Trả về Response
+        return Response(songs_serializer.data, status=status.HTTP_200_OK)
+    
+def getAlbumSongs(album_id):
+    # Lấy thông tin album từ cơ sở dữ liệu
+    album = get_object_or_404(Album, album_id=album_id)
+
+    return Song.objects.filter(albumsong__album=album).prefetch_related('artistsong_set__artist')

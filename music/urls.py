@@ -26,4 +26,7 @@ urlpatterns = [
     path('artists/<int:artist_id>/', ArtistDetailView.as_view(), name='artist-detail'),
     path('artists/suggested/', OldestArtistsView.as_view(), name='oldest-artists'),
     path('search/', SearchView.as_view(), name='search'),
+    path('users/<int:user_id>/', UserDetailView.as_view(), name='user-detail'),
+    path('albums/<int:album_id>/', AlbumDetailView.as_view(), name='album-detail'),
+    path('albums/<int:album_id>/songs/', AlbumSongsView.as_view(), name='album-songs'),
 ]
