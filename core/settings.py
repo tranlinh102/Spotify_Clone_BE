@@ -88,7 +88,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'spotify',
         'USER': 'root',
-        'PASSWORD': '',
+        'PASSWORD': 'Dai280903@',
         'HOST': 'localhost',
         'PORT': '3306',
     }
@@ -178,7 +178,7 @@ STORAGES = {
             "region_name": config('AWS_S3_REGION_NAME', default='ap-southeast-2'),
             "signature_version": "s3v4",
             "file_overwrite": False,            
-            #"custom_domain": f'{config("AWS_STORAGE_BUCKET_NAME")}.s3.{config("AWS_S3_REGION_NAME", default="ap-southeast-2")}.amazonaws.com',
+            # "custom_domain": f'{config("AWS_STORAGE_BUCKET_NAME")}.s3.{config("AWS_S3_REGION_NAME", default="ap-southeast-2")}.amazonaws.com',
             "default_acl": None,
         },
     },

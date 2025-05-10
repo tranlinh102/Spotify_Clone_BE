@@ -12,6 +12,7 @@ from botocore.exceptions import ClientError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
 from django.conf import settings
 from decouple import config
 from rest_framework.decorators import action
@@ -19,9 +20,20 @@ from botocore.exceptions import PartialCredentialsError
 from rest_framework.permissions import AllowAny
 from django.db.models import Count
 from django.contrib.auth.models import User
+from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q
 
-from rest_framework.pagination import PageNumberPagination
+
+class ContentTypeStatsView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        music_count = Song.objects.filter(content_type='music').count()
+        podcast_count = Song.objects.filter(content_type='podcast').count()
+
+        return Response({
+            "music": music_count,
+            "podcast": podcast_count
+        })
 
 class PagePagination(PageNumberPagination):
     page_size = 6
@@ -164,7 +176,37 @@ class PlaylistViewSet(viewsets.ModelViewSet):
             aws_secret_access_key=config('AWS_SECRET_ACCESS_KEY'),
             region_name=config('AWS_S3_REGION_NAME', default='ap-southeast-1')
         )
+    
+    @action(detail=False, methods=['get'], url_path='search')
+    def search_by_title(self, request):
+        try:
+            title_query = request.query_params.get('title', '').strip()
+            if title_query:
+                # Tìm kiếm theo title nếu có query
+                playlists = Playlist.objects.filter(title__icontains=title_query)
+            else:
+                # Lấy tất cả danh sách phát nếu không có query
+                playlists = Playlist.objects.all()
 
+            # Áp dụng phân trang với lớp tùy chỉnh
+            paginator = PagePagination()
+            page = paginator.paginate_queryset(playlists, request)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return paginator.get_paginated_response(serializer.data)
+
+            # Nếu không có phân trang thì trả thẳng
+            serializer = self.get_serializer(playlists, many=True)
+            return Response({
+                "message": "Search results",
+                "results": serializer.data
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to search playlists: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
     @action(detail=False, methods=['get'], url_path='count')
     def count_playlists(self, request):
         try:
@@ -243,21 +285,6 @@ class PlaylistViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": f"Failed to update playlist: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)    
     
-    @action(detail=False, methods=['get'], url_path='search')
-    def search_by_title(self, request):
-        try:
-            title_query = request.query_params.get('title', '').strip()
-            if not title_query:
-                return Response({"error": "Query parameter 'title' is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-            playlists = Playlist.objects.filter(title__icontains=title_query)
-            serializer = self.get_serializer(playlists, many=True)
-            return Response({
-                "message": "Search results",
-                "results": serializer.data
-            }, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": f"Failed to search playlists: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR) 
    
 class ArtistViewSet(viewsets.ModelViewSet):
     queryset = Artist.objects.all()
@@ -375,6 +402,7 @@ class ArtistViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response({"error": f"Failed to update artist: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
 
     @action(detail=False, methods=['get'], url_path='search')
     def search_artist(self, request):
@@ -433,7 +461,7 @@ class AlbumViewSet(viewsets.ModelViewSet):
             return Response({
                 "error": f"Failed to retrieve album count: {str(e)}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+        
     @action(detail=False, methods=['post'], url_path='add')
     def add_album(self, request):
         try:
@@ -559,7 +587,7 @@ class SongViewSet(viewsets.ModelViewSet):
             return Response({
                 "error": f"Failed to retrieve top favorite songs: {str(e)}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+        
     @action(detail=False, methods=['get'], url_path='count')
     def count_song(self, request):
         try:
@@ -572,7 +600,7 @@ class SongViewSet(viewsets.ModelViewSet):
             return Response({
                 "error": f"Failed to retrieve song count: {str(e)}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+        
     @action(detail=False, methods=['post'], url_path='add')
     def add_song(self, request, *args, **kwargs):
         try:
@@ -597,6 +625,19 @@ class SongViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": f"Failed to create song: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
+    @action(detail=True, methods=['get'], url_path='detail')
+    def get_song_by_id(self, request, pk=None):
+        try:
+            song = self.get_queryset().filter(pk=pk).first()
+            if not song:
+                return Response({"error": "Không tìm thấy bài hát"}, status=status.HTTP_404_NOT_FOUND)
+            
+            serializer = self.get_serializer(song)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": f"Lỗi khi lấy bài hát: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     @action(detail=True, methods=['put'], url_path='update')
     def update_song(self, request, pk=None):
         try:
@@ -663,19 +704,28 @@ class SongViewSet(viewsets.ModelViewSet):
     def search_song(self, request):
         try:
             title_query = request.query_params.get('title', '').strip()
-            if not title_query:
-                return Response(
-                    {"error": "Query parameter 'title' is required."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
 
-            songs = Song.objects.filter(title__icontains=title_query)
+            if title_query:
+                # Tìm kiếm theo title nếu có query
+                songs = Song.objects.filter(title__icontains=title_query)
+            else:
+                # Lấy tất cả bài hát nếu không có query
+                songs = Song.objects.all()
+
+            # Áp dụng phân trang với lớp tùy chỉnh
+            paginator = PagePagination()
+            page = paginator.paginate_queryset(songs, request)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return paginator.get_paginated_response(serializer.data)
+
+            # Nếu không có phân trang thì trả thẳng
+
             serializer = self.get_serializer(songs, many=True)
             return Response({
                 "message": "Search results",
                 "results": serializer.data
             }, status=status.HTTP_200_OK)
-
         except Exception as e:
             return Response(
                 {"error": f"Failed to search songs: {str(e)}"},
@@ -686,6 +736,18 @@ class ArtistSongViewSet(viewsets.ModelViewSet):
     queryset = ArtistSong.objects.all()
     serializer_class = ArtistSongSerializer
     permission_classes = [AllowAny]
+
+    @action(detail=False, methods=['delete'], url_path='delete_by_song')
+    def delete_by_song(self, request):
+        song_id = request.query_params.get('song_id')
+        if not song_id:
+            return Response({"error": "Missing song_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        deleted_count, _ = ArtistSong.objects.filter(song_id=song_id).delete()
+
+        return Response({
+            "message": f"Deleted {deleted_count} ArtistSong records for song_id={song_id}"
+        }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], url_path='add')
     def add_artist_song(self, request):
@@ -834,6 +896,18 @@ class AlbumSongViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": f"Failed to create AlbumSong: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['delete'], url_path='delete_by_song')
+    def delete_by_song(self, request):
+        song_id = request.query_params.get('song_id')
+        if not song_id:
+            return Response({"error": "Missing song_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        deleted_count, _ = AlbumSong.objects.filter(song_id=song_id).delete()
+
+        return Response({
+            "message": f"Deleted {deleted_count} AlbumSong records for song_id={song_id}"
+        }, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['delete'], url_path='delete')
     def delete_album_song(self, request, pk=None):
