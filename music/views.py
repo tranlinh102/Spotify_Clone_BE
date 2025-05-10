@@ -349,3 +349,26 @@ def getAlbumSongs(album_id):
     album = get_object_or_404(Album, album_id=album_id)
 
     return Song.objects.filter(albumsong__album=album).prefetch_related('artistsong_set__artist')
+
+class UpdatePlaylistView(APIView):
+    def put(self, request, playlist_id):
+        # Lấy playlist từ cơ sở dữ liệu
+        playlist = get_object_or_404(Playlist, playlist_id=playlist_id)
+
+        # Kiểm tra xem người dùng hiện tại có phải là người tạo playlist không
+        if playlist.created_by != request.user:
+            return Response({"error": "You do not have permission to update this playlist."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Kiểm tra và xóa ảnh cũ nếu có
+        if 'image' in request.data and playlist.image:
+            playlist.image.delete(save=False)  # Xóa ảnh cũ mà không lưu lại đối tượng
+
+        # Cập nhật tên và hình ảnh của playlist
+        serializer = PlaylistSerializer(playlist, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "message": "Playlist updated successfully.",
+                "playlist": serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
