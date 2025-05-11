@@ -45,6 +45,9 @@ class ChatRoomMessagesView(ListAPIView):
     
 class SendMessageView(APIView):
 
+    def options(self, request, *args, **kwargs):
+        return Response({'detail': 'Method "OPTIONS" not allowed.'}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
     def post(self, request):
         user = request.user
         data = request.data
