@@ -100,7 +100,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'spotify',
         'USER': 'root',
-        'PASSWORD': 'Dai280903@',
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '3306',
     }
