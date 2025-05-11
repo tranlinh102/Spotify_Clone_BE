@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-y!d7ij4-)i%b%j&lkh^t@y&w&q8410l^yaz#hj67756n7y@w7a
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
 
 
 # Application definition
@@ -152,7 +152,7 @@ CORS_ALLOW_CREDENTIALS = True  # Cho phép gửi cookie
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
-    "http://localhost:5173"
+    "http://localhost:5173",
 ]
 
 REST_FRAMEWORK = {
