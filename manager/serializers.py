@@ -22,7 +22,7 @@ class PlaylistSerializer(serializers.ModelSerializer):
     )
     class Meta:
         model = Playlist
-        fields = ['playlist_id', 'title', 'image', 'created_at']
+        fields = ['playlist_id', 'title', 'image', 'created_at', 'created_by_id']
         read_only_fields = ['playlist_id', 'created_at']
 
 class ArtistSerializer(serializers.ModelSerializer):
