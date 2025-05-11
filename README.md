@@ -7,8 +7,8 @@
   - **Frontend** (React) – [Xem tại đây](https://github.com/MinhTriTech/spotify-clone-fe)
 - Ngôn ngữ sử dụng: **Python 3.12.3**
 - Cơ sở dữ liệu: **MySQL**
-- Các thư viện chính của project: Django, djangorestframework, PyMySQL, corsheaders, PyJWT, boto3, django-storages, python-decouple
-
+- Các thư viện chính của project: Django, djangorestframework, PyMySQL, corsheaders, PyJWT, boto3, django-storages, python-decouple, google-auth
+- [File word báo cáo project](https://www.overleaf.com/4689614973xvysqwpnkqpj#bb5d79)
 ---
 
 ## 🚀 Cách chạy dự án trên hệ điều hành Linux
