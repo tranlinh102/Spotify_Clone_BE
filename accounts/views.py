@@ -13,6 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from django.contrib.auth import get_user_model
+from decouple import config
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
@@ -31,8 +32,8 @@ def set_jwt_cookies(response: Response, access_token: str, refresh_token: str = 
         key='access_token',
         value=access_token,
         httponly=False,
-        secure=False,
-        samesite='Lax',
+        secure=config('COOKIE_SECURE', default=True, cast=bool),
+        samesite=config('COOKIE_SAMESITE', default='None'),
         path='/',
         max_age=60 * 60 # 60 phút
     )
@@ -43,8 +44,8 @@ def set_jwt_cookies(response: Response, access_token: str, refresh_token: str = 
             key='refresh_token',
             value=refresh_token,
             httponly=True,
-            secure=False,
-            samesite='Lax',
+            secure=config('COOKIE_SECURE', default=True, cast=bool),
+            samesite=config('COOKIE_SAMESITE', default='None'),
             path='/api/auth/',
             max_age=7 * 24 * 60 * 60  # 7 ngày
         )
@@ -118,12 +119,12 @@ class LogoutView(APIView):
         res.delete_cookie(
             key='access_token',
             path='/',
-            samesite='Lax',
+            samesite=config('COOKIE_SAMESITE', default='None'),
         )
         res.delete_cookie(
             key=settings.SIMPLE_JWT['AUTH_COOKIE'],  # refresh_token
             path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH'],
-            samesite='Lax',
+            samesite=config('COOKIE_SAMESITE', default='None'),
         )
         return res
 
