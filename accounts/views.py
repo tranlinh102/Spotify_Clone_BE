@@ -32,7 +32,7 @@ def set_jwt_cookies(response: Response, access_token: str, refresh_token: str = 
         value=access_token,
         httponly=False,
         secure=False,
-        samesite='None',
+        samesite='Lax',
         path='/',
         max_age=60 * 60 # 60 phút
     )
@@ -44,7 +44,7 @@ def set_jwt_cookies(response: Response, access_token: str, refresh_token: str = 
             value=refresh_token,
             httponly=True,
             secure=False,
-            samesite='None',
+            samesite='Lax',
             path='/api/auth/',
             max_age=7 * 24 * 60 * 60  # 7 ngày
         )
