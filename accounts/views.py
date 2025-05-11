@@ -10,6 +10,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from django.conf import settings
 from rest_framework.permissions import IsAuthenticated
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from django.contrib.auth import get_user_model
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
@@ -131,3 +134,33 @@ class UserInfoView(APIView):
     def get(self, request):
         user = request.user
         return Response({'user_info': get_user_info(user)}, status=status.HTTP_200_OK)
+    
+class GoogleLoginView(APIView):
+    def post(self, request):
+        token = request.data.get('token')
+        try:
+            idinfo = id_token.verify_oauth2_token(token, requests.Request(), "674163388601-d7dk6m8us1j3duai1cp1ipejcoce3339.apps.googleusercontent.com")
+            email = idinfo['email']
+            name = idinfo.get('name', '')
+            
+            User = get_user_model()
+            user, created = User.objects.get_or_create(email=email, defaults={'username': name, 'email': email})
+            
+            # Tạo token JWT
+            refresh = RefreshToken.for_user(user)
+            access = refresh.access_token
+
+            # Tạo response giống LoginView
+            res = Response({
+                "message": "Login success",
+                "is_staff": user.is_staff,
+                "access token": str(access),
+                "user_info": get_user_info(user)
+            }, status=status.HTTP_200_OK)
+
+            # Set cookie nếu bạn dùng kiểu này
+            set_jwt_cookies(res, access_token=access, refresh_token=refresh)
+
+            return res
+        except Exception as e:
+            return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
