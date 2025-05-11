@@ -152,7 +152,8 @@ CORS_ALLOW_CREDENTIALS = True  # Cho phép gửi cookie
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "http://" + config('FRONTEND_URL', default='localhost:5173'),
 ]
 
 REST_FRAMEWORK = {
