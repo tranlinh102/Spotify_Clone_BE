@@ -148,7 +148,14 @@ class ChatRoom(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        unique_together = ('user1', 'user2')
         db_table = 'chatrooms'
+
+    def save(self, *args, **kwargs):
+        # Đảm bảo user1 luôn có id nhỏ hơn để tránh đảo ngược
+        if self.user1.id > self.user2.id:
+            self.user1, self.user2 = self.user2, self.user1
+        super().save(*args, **kwargs)
 
 
 class ChatMessage(models.Model):

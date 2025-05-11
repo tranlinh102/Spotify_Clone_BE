@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from manager.models import *
+from asgiref.sync import sync_to_async
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -17,13 +18,13 @@ class UserSerializer(serializers.ModelSerializer):
 
 class PlaylistSerializer(serializers.ModelSerializer):
     created_by_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
+        read_only=True,
         source='created_by'  # Ánh xạ với trường 'create_by' trong model playlist
     )
     class Meta:
         model = Playlist
         fields = ['playlist_id', 'title', 'image', 'created_at', 'created_by_id']
-        read_only_fields = ['playlist_id', 'created_at']
+        read_only_fields = ['playlist_id', 'created_at', 'created_by_id']
 
 class ArtistSerializer(serializers.ModelSerializer):
     follower_count = serializers.IntegerField(read_only=True)
@@ -138,16 +139,72 @@ class FollowerSerializer(serializers.ModelSerializer):
         model = Follower
         fields = ['id', 'user_id', 'artist_id', 'followed_at']
 
-class MessageSerializer(serializers.ModelSerializer):
+class ChatMessageSerializer(serializers.ModelSerializer):
     sender_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
         source='sender'  # Ánh xạ với trường 'sender' trong model
     )
-    receiver_id = serializers.PrimaryKeyRelatedField(
-        queryset=User.objects.all(),
-        source='receiver'  # Ánh xạ với trường 'receiver' trong model
+    chatroom_id = serializers.PrimaryKeyRelatedField(
+        queryset=ChatRoom.objects.all(),
+        source='chatroom'  # Ánh xạ với trường 'chatroom' trong model
     )
 
     class Meta:
-        model = Message
-        fields = ['message_id', 'sender_id', 'receiver_id', 'message_text', 'sent_at']
+        model = ChatMessage
+        fields = ['id', 'sender_id', 'chatroom_id', 'content', 'timestamp']
+
+class ChatRoomSerializer(serializers.ModelSerializer):
+    user1_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        source='user1'  # Ánh xạ với trường 'user1' trong model
+    )
+    user2_id = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
+        source='user2'  # Ánh xạ với trường 'user2' trong model
+    )
+
+    class Meta:
+        model = ChatRoom
+        fields = ['id', 'user1_id', 'user2_id', 'created_at']
+    
+class ChatRoomWithLastMessageSerializer(serializers.ModelSerializer):
+    last_message = serializers.SerializerMethodField()
+    other_user_id = serializers.SerializerMethodField()
+    other_user_name = serializers.SerializerMethodField()  # Thêm trường này
+
+    class Meta:
+        model = ChatRoom
+        fields = ['id', 'other_user_id', 'other_user_name', 'last_message']
+
+    def get_last_message(self, obj):
+        # Lấy tin nhắn mới nhất trong ChatRoom
+        last_message = obj.chatmessage_set.order_by('-timestamp').first()
+        if last_message:
+            return {
+                'id': last_message.id,
+                'content': last_message.content,
+                'sender_id': last_message.sender.id,
+                'is_read': last_message.is_read,  # Trạng thái đã đọc
+                'timestamp': last_message.timestamp
+            }
+        return None
+
+    def get_other_user_id(self, obj):
+        # Lấy ID của người còn lại trong ChatRoom
+        request_user = self.context['request'].user
+        if obj.user1 == request_user:
+            return obj.user2.id
+        return obj.user1.id
+
+    def get_other_user_name(self, obj):
+        # Lấy tên của người còn lại trong ChatRoom
+        request_user = self.context['request'].user
+        if obj.user1 == request_user:
+            return obj.user2.username
+        return obj.user1.username
+     
+@sync_to_async
+def save_serializer(serializer_class, data):
+    serializer = serializer_class(data=data)
+    serializer.is_valid(raise_exception=True)
+    return serializer.save()

@@ -2,11 +2,7 @@ from rest_framework import viewsets
 from manager.models import (
     Playlist, Artist, ArtistSong, Album, Song, 
     Favorite, Download, AlbumSong, Follower, Message, PlaylistSong)
-from .serializers import (
-    PlaylistSerializer,ArtistSerializer, AlbumSongSerializer, 
-    AlbumSerializer, SongSerializer, FavoriteSerializer, 
-    DownloadSerializer, AlbumSongSerializer, FollowerSerializer, 
-    MessageSerializer, ArtistSongSerializer, PlaylistSongSerializer, UserSerializer)
+from .serializers import *
 import boto3
 from botocore.exceptions import ClientError
 from rest_framework.response import Response
@@ -1071,7 +1067,7 @@ class FollowerViewSet(viewsets.ModelViewSet):
 
 class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all()
-    serializer_class = MessageSerializer
+    serializer_class = ChatMessageSerializer
 
     @action(detail=False, methods=['post'], url_path='send')
     def send_message(self, request):

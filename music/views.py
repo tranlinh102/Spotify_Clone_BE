@@ -1,16 +1,14 @@
 from django.shortcuts import render, get_object_or_404
 import boto3
-from django.conf import settings
 from decouple import config
-from django.db.models import F
-
-# Create your views here.
+from django.db.models import Q
+from django.contrib.auth.models import User
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import ListAPIView
-from manager.models import Artist, Favorite, Follower, Song, Playlist, PlaylistSong
-from manager.serializers import SongSerializer, PlaylistSerializer, ArtistSerializer
+from manager.models import Album, Artist, Favorite, Follower, Song, Playlist, PlaylistSong
+from manager.serializers import *
 
 class SongUploadView(APIView):
     def post(self, request):
@@ -156,9 +154,9 @@ class UserFavoriteSongsView(ListAPIView):
     serializer_class = SongSerializer
 
     def get_queryset(self):
-        # Lấy danh sách bài hát yêu thích của người dùng hiện tại
-        return Song.objects.filter(favorite__user=self.request.user).distinct()
-
+        # Lấy danh sách bài hát yêu thích của người dùng hiện tại, sắp xếp theo thứ tự thêm vào (cũ nhất trước)
+        return Song.objects.filter(favorite__user=self.request.user).order_by('favorite__added_at').distinct()
+    
 class AddSongToFavoritesView(APIView):
     def post(self, request):
         song_id = request.data.get('song_id')
@@ -196,12 +194,16 @@ class PlaylistDetailView(APIView):
         playlist = get_object_or_404(Playlist, playlist_id=playlist_id)
         playlist_serializer = PlaylistSerializer(playlist)
 
+        # Kiểm tra xem người dùng hiện tại có phải là người tạo playlist không
+        is_owner = playlist.created_by == request.user
+
         # Lấy danh sách bài hát trong playlist (tận dụng PlaylistSongsView)
         songs = Song.objects.filter(playlistsong__playlist_id=playlist_id).prefetch_related('artistsong_set__artist')
         songs_serializer = SongSerializer(songs, many=True)
 
         return Response({
             "playlist": playlist_serializer.data,
+            "is_owner": is_owner,
             "songs": songs_serializer.data
         }, status=status.HTTP_200_OK)
     
@@ -221,11 +223,152 @@ class ArtistDetailView(APIView):
         # Kiểm tra xem người dùng có theo dõi nghệ sĩ này không
         is_following = Follower.objects.filter(user=request.user, artist=artist).exists()
 
+        # Lấy danh sách bài hát của nghệ sĩ
         songs = Song.objects.filter(artistsong__artist_id=artist_id).prefetch_related('artistsong_set__artist')
         songs_serializer = SongSerializer(songs, many=True)
+
+        # Lấy danh sách album của nghệ sĩ
+        albums = Album.objects.filter(artist=artist)
+        albums_serializer = AlbumSerializer(albums, many=True)
 
         return Response({
             "artist": artist_serializer.data,
             "is_following": is_following,
+            "songs": songs_serializer.data,
+            "albums": albums_serializer.data
+        }, status=status.HTTP_200_OK)
+    
+class CheckSongFavoriteView(APIView):
+    def get(self, request, song_id):
+        # Kiểm tra bài hát có tồn tại không
+        song = get_object_or_404(Song, song_id=song_id)
+
+        # Kiểm tra xem người dùng hiện tại có yêu thích bài hát này không
+        is_favorite = Favorite.objects.filter(user=request.user, song=song).exists()
+
+        return Response({
+            "song_id": song_id,
+            "is_favorite": is_favorite
+        }, status=status.HTTP_200_OK)
+    
+class SearchView(APIView):
+    def get(self, request):
+        query = request.query_params.get('q', '')  # Lấy chuỗi tìm kiếm từ query parameter
+
+        if not query:
+            return Response({"error": "Query parameter 'q' is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Tìm kiếm gần giống trong Song, Playlist, Artist, và Album
+        songs = Song.objects.filter(Q(title__icontains=query))
+        playlists = Playlist.objects.filter(Q(title__icontains=query))
+        artists = Artist.objects.filter(Q(name__icontains=query))
+        albums = Album.objects.filter(Q(title__icontains=query))
+        users = User.objects.filter(Q(username__icontains=query), is_staff = False, is_active=True, is_superuser=False).distinct()
+
+        # Serialize dữ liệu
+        songs_serializer = SongSerializer(songs, many=True)
+        playlists_serializer = PlaylistSerializer(playlists, many=True)
+        artists_serializer = ArtistSerializer(artists, many=True)
+        albums_serializer = AlbumSerializer(albums, many=True)
+        users_serializer = UserSerializer(users, many=True)
+
+        return Response({
+            "songs": songs_serializer.data,
+            "playlists": playlists_serializer.data,
+            "artists": artists_serializer.data,
+            "albums": albums_serializer.data,
+            "users": users_serializer.data
+        }, status=status.HTTP_200_OK)
+    
+class OldestArtistsView(ListAPIView):
+    serializer_class = ArtistSerializer
+
+    def get_queryset(self):
+        # Lấy 8 nghệ sĩ cũ nhất dựa trên thời gian tạo (created_at)
+        return Artist.objects.all()[:4]
+    
+class DeletePlaylistView(APIView):
+    def delete(self, request, playlist_id):
+        # Lấy playlist từ cơ sở dữ liệu
+        playlist = get_object_or_404(Playlist, playlist_id=playlist_id)
+
+        # Kiểm tra xem người dùng hiện tại có phải là người tạo playlist không
+        if playlist.created_by != request.user:
+            return Response({"error": "You do not have permission to delete this playlist."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Xóa playlist
+        playlist.delete()
+        return Response({"message": "Playlist deleted successfully."}, status=status.HTTP_200_OK)
+
+class UserDetailView(APIView):
+    def get(self, request, user_id):
+        # Lấy thông tin người dùng từ cơ sở dữ liệu
+        user = get_object_or_404(User, id=user_id)
+
+        # Serialize dữ liệu người dùng
+        user_serializer = UserSerializer(user)
+
+        # Lấy danh sách playlist mà người dùng đã tạo
+        playlists = Playlist.objects.filter(created_by=user)
+        playlist_serializer = PlaylistSerializer(playlists, many=True)
+
+        return Response({
+            "user": user_serializer.data,
+            "playlists": playlist_serializer.data
+        }, status=status.HTTP_200_OK)
+
+class AlbumDetailView(APIView):
+    def get(self, request, album_id):
+        # Lấy thông tin album từ cơ sở dữ liệu
+        album = get_object_or_404(Album, album_id=album_id)
+        album_serializer = AlbumSerializer(album)
+
+        # Lấy danh sách bài hát trong album
+        songs = getAlbumSongs(album_id)
+        songs_serializer = SongSerializer(songs, many=True)
+
+        return Response({
+            "album": album_serializer.data,
             "songs": songs_serializer.data
         }, status=status.HTTP_200_OK)
+    
+class AlbumSongsView(APIView):
+    def get(self, request, album_id):
+
+        # Lấy danh sách bài hát
+        songs = getAlbumSongs(album_id)
+
+        # Serialize danh sách bài hát
+        songs_serializer = SongSerializer(songs, many=True)
+
+        # Trả về Response
+        return Response(songs_serializer.data, status=status.HTTP_200_OK)
+    
+def getAlbumSongs(album_id):
+    # Lấy thông tin album từ cơ sở dữ liệu
+    album = get_object_or_404(Album, album_id=album_id)
+
+    return Song.objects.filter(albumsong__album=album).prefetch_related('artistsong_set__artist')
+
+class UpdatePlaylistView(APIView):
+    def put(self, request, playlist_id):
+        # Lấy playlist từ cơ sở dữ liệu
+        playlist = get_object_or_404(Playlist, playlist_id=playlist_id)
+
+        # Kiểm tra xem người dùng hiện tại có phải là người tạo playlist không
+        if playlist.created_by != request.user:
+            return Response({"error": "You do not have permission to update this playlist."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Kiểm tra và xóa ảnh cũ nếu có
+        if 'image' in request.data and playlist.image:
+            playlist.image.delete(save=False)  # Xóa ảnh cũ mà không lưu lại đối tượng
+
+        # Cập nhật tên và hình ảnh của playlist
+        serializer = PlaylistSerializer(playlist, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                "message": "Playlist updated successfully.",
+                "playlist": serializer.data
+            }, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

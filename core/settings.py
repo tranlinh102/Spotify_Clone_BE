@@ -29,12 +29,13 @@ SECRET_KEY = 'django-insecure-y!d7ij4-)i%b%j&lkh^t@y&w&q8410l^yaz#hj67756n7y@w7a
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*').split(',')
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.staticfiles',
@@ -47,6 +48,8 @@ INSTALLED_APPS = [
     'manager.apps.ManagerConfig',
     'admin_dashboard.apps.AdminDashboardConfig',
     'music.apps.MusicConfig',
+    'channels',
+    'chat.apps.ChatConfig',
 ]
 
 MIDDLEWARE = [
@@ -77,8 +80,17 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'core.wsgi.application'
+# WSGI_APPLICATION = 'core.wsgi.application'
+ASGI_APPLICATION = 'core.asgi.application'
 
+CHANNEL_LAYERS = {
+    'default' : {
+        'BACKEND' : 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts':[('127.0.0.1', 6379)]
+        }
+    }
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -140,7 +152,8 @@ CORS_ALLOW_CREDENTIALS = True  # Cho phép gửi cookie
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "http://" + config('FRONTEND_URL', default='localhost:5173'),
 ]
 
 REST_FRAMEWORK = {
@@ -158,7 +171,7 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),  # thời gian sống của access token
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),  # thời gian sống của access token
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
@@ -179,7 +192,6 @@ STORAGES = {
             "signature_version": "s3v4",
             "file_overwrite": False,            
             "custom_domain": f's3.{config("AWS_S3_REGION_NAME", default="ap-southeast-2")}.amazonaws.com/{config("AWS_STORAGE_BUCKET_NAME")}',
-            # "custom_domain": f'{config("AWS_STORAGE_BUCKET_NAME")}.s3.{config("AWS_S3_REGION_NAME", default="ap-southeast-2")}.amazonaws.com',
             "default_acl": None,
         },
     },

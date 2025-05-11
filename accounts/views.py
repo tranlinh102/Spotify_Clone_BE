@@ -10,6 +10,10 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from django.conf import settings
 from rest_framework.permissions import IsAuthenticated
+from google.oauth2 import id_token
+from google.auth.transport import requests
+from django.contrib.auth import get_user_model
+from decouple import config
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
@@ -28,10 +32,10 @@ def set_jwt_cookies(response: Response, access_token: str, refresh_token: str = 
         key='access_token',
         value=access_token,
         httponly=False,
-        secure=True,
-        samesite='None',
+        secure=config('COOKIE_SECURE', default=True, cast=bool),
+        samesite=config('COOKIE_SAMESITE', default='None'),
         path='/',
-        max_age=60 * 30 # 30 phút
+        max_age=60 * 60 # 60 phút
     )
 
     # REFRESH TOKEN – dùng riêng, nếu có truyền vào
@@ -40,8 +44,8 @@ def set_jwt_cookies(response: Response, access_token: str, refresh_token: str = 
             key='refresh_token',
             value=refresh_token,
             httponly=True,
-            secure=True,
-            samesite='None',
+            secure=config('COOKIE_SECURE', default=True, cast=bool),
+            samesite=config('COOKIE_SAMESITE', default='None'),
             path='/api/auth/',
             max_age=7 * 24 * 60 * 60  # 7 ngày
         )
@@ -115,12 +119,12 @@ class LogoutView(APIView):
         res.delete_cookie(
             key='access_token',
             path='/',
-            samesite='None',
+            samesite=config('COOKIE_SAMESITE', default='None'),
         )
         res.delete_cookie(
             key=settings.SIMPLE_JWT['AUTH_COOKIE'],  # refresh_token
             path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH'],
-            samesite='None',
+            samesite=config('COOKIE_SAMESITE', default='None'),
         )
         return res
 
@@ -131,3 +135,35 @@ class UserInfoView(APIView):
     def get(self, request):
         user = request.user
         return Response({'user_info': get_user_info(user)}, status=status.HTTP_200_OK)
+    
+class GoogleLoginView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        token = request.data.get('token')
+        try:
+            idinfo = id_token.verify_oauth2_token(token, requests.Request(), "674163388601-d7dk6m8us1j3duai1cp1ipejcoce3339.apps.googleusercontent.com")
+            email = idinfo['email']
+            name = idinfo.get('name', '')
+            
+            User = get_user_model()
+            user, created = User.objects.get_or_create(email=email, defaults={'username': name, 'email': email})
+            
+            # Tạo token JWT
+            refresh = RefreshToken.for_user(user)
+            access = refresh.access_token
+
+            # Tạo response giống LoginView
+            res = Response({
+                "message": "Login success",
+                "is_staff": user.is_staff,
+                "access token": str(access),
+                "user_info": get_user_info(user)
+            }, status=status.HTTP_200_OK)
+
+            # Set cookie nếu bạn dùng kiểu này
+            set_jwt_cookies(res, access_token=access, refresh_token=refresh)
+
+            return res
+        except Exception as e:
+            return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
