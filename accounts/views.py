@@ -136,6 +136,8 @@ class UserInfoView(APIView):
         return Response({'user_info': get_user_info(user)}, status=status.HTTP_200_OK)
     
 class GoogleLoginView(APIView):
+    permission_classes = [AllowAny]
+    
     def post(self, request):
         token = request.data.get('token')
         try:
