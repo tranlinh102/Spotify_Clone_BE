@@ -27,16 +27,35 @@ git clone https://github.com/tranlinh102/Spotify_Clone_BE.git
 cd Spotify_Clone_BE
 ```
 
-- Nếu bạn chưa cài python thì thực hiện các câu lệnh sau:
+- Nếu bạn chưa cài python và các cấu hình cần thiết thì thực hiện các câu lệnh sau:
 
 ```bash
 sudo apt update
+```
+
+```bash
+#Python
 sudo apt install python3.12
 sudo apt install python3-venv
 sudo apt install python3-pip
 ```
 
-- Nếu có python rồi thì thực hiện
+```bash
+#Redis
+sudo apt-get install redis
+sudo service redis-server start
+```
+
+```bash
+sudo apt install mysql-server
+sudo mysql
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '';
+FLUSH PRIVILEGES;
+EXIT;
+mysql -u root -p < database.sql
+```
+
+- Sau khi cài đặt xong thì ta tạo môi trường ảo
 
 ```bash
 python3 -m venv venv
